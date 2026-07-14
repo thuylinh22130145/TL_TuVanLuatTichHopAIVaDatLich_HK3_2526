@@ -1,0 +1,243 @@
+.lawyer-application-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.lawyer-application-hero {
+  margin-bottom: 28px;
+  padding: 36px;
+  border-radius: 28px;
+  color: #fff;
+  background: linear-gradient(135deg, #14213d 0%, #20385f 70%, #8d772d 100%);
+  box-shadow: 0 18px 45px rgba(20, 33, 61, 0.14);
+}
+
+.lawyer-application-eyebrow {
+  margin: 0 0 12px;
+  color: #e8c954;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.lawyer-application-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.2;
+}
+
+.lawyer-application-hero > p:last-child {
+  max-width: 760px;
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.7;
+}
+
+.lawyer-application-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+.lawyer-application-card,
+.lawyer-application-aside {
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 35px rgba(20, 33, 61, 0.07);
+}
+
+.lawyer-application-card { padding: 32px; }
+
+.lawyer-application-form {
+  display: grid;
+  gap: 30px;
+}
+
+.lawyer-application-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 28px;
+  border: 0;
+  border-bottom: 1px solid rgba(20, 33, 61, 0.1);
+}
+
+.lawyer-application-form legend {
+  width: 100%;
+  margin-bottom: 8px;
+  color: #14213d;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.lawyer-application-section-note {
+  margin: 0 0 18px;
+  color: #647084;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.lawyer-application-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.lawyer-application-grid .full-width { grid-column: 1 / -1; }
+
+.lawyer-application-form label > span:first-child {
+  display: block;
+  margin-bottom: 8px;
+  color: #14213d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.lawyer-application-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(20, 33, 61, 0.16);
+  border-radius: 12px;
+  outline: none;
+  color: #14213d;
+  background: #fbfaf7;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lawyer-application-input:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.16);
+}
+
+.lawyer-application-input[readonly] {
+  cursor: not-allowed;
+  background: #eef1f5;
+}
+
+textarea.lawyer-application-input {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.lawyer-application-consent {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8f6ef;
+}
+
+.lawyer-application-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #14213d;
+}
+
+.lawyer-application-consent span {
+  margin: 0 !important;
+  color: #4a5568 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.6;
+}
+
+.lawyer-application-submit {
+  justify-self: start;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: #14213d;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lawyer-application-submit:hover:not(:disabled) { background: #1f3459; }
+.lawyer-application-submit:disabled { cursor: not-allowed; opacity: 0.65; }
+
+.lawyer-application-alert {
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+}
+
+.lawyer-application-alert.success {
+  border: 1px solid #9dd6b2;
+  color: #17633b;
+  background: #effaf3;
+}
+
+.lawyer-application-alert.error {
+  border: 1px solid #efb4b4;
+  color: #9b2c2c;
+  background: #fff2f2;
+}
+
+.lawyer-application-aside {
+  position: sticky;
+  top: 96px;
+  padding: 26px;
+  color: #4a5568;
+}
+
+.lawyer-application-aside h2,
+.lawyer-application-aside h3 {
+  margin: 0 0 14px;
+  color: #14213d;
+}
+
+.lawyer-application-aside h3 { margin-top: 28px; }
+
+.lawyer-application-aside ul,
+.lawyer-application-aside ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.55;
+}
+
+.lawyer-application-login {
+  margin: 28px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(20, 33, 61, 0.1);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.lawyer-application-login a {
+  color: #9a7810;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .lawyer-application-layout { grid-template-columns: 1fr; }
+  .lawyer-application-aside { position: static; }
+}
+
+@media (max-width: 640px) {
+  .lawyer-application-page {
+    width: min(100% - 20px, 1180px);
+    padding-top: 20px;
+  }
+
+  .lawyer-application-hero,
+  .lawyer-application-card,
+  .lawyer-application-aside {
+    padding: 22px;
+    border-radius: 18px;
+  }
+
+  .lawyer-application-grid { grid-template-columns: 1fr; }
+  .lawyer-application-grid .full-width { grid-column: auto; }
+  .lawyer-application-submit { width: 100%; }
+}
