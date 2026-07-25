@@ -15,6 +15,14 @@ export async function updateUserStatus(req, res) {
   res.json({ success: true, data: user.toJSON(), message: 'Đã cập nhật trạng thái tài khoản.' });
 }
 
+export async function deleteUserAccount(req, res) {
+  await portalService.deleteUserAccount(req.user.id, req.params.id);
+  res.json({
+    success: true,
+    message: 'Đã xóa tài khoản.',
+  });
+}
+
 export async function categories(req, res) {
   const rows = await portalService.listCategories();
   res.json({ success: true, data: rows.map((row) => row.toJSON()) });

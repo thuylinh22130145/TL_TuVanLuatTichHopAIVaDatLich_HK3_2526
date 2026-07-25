@@ -25,6 +25,7 @@ router.use(requireAdmin);
 router.get('/overview', asyncHandler(portalCtrl.overview));
 router.get('/users', asyncHandler(portalCtrl.users));
 router.patch('/users/:id/status', asyncHandler(portalCtrl.updateUserStatus));
+router.delete('/users/:id', asyncHandler(portalCtrl.deleteUserAccount));
 router.get('/categories', asyncHandler(portalCtrl.categories));
 router.post('/categories', asyncHandler(portalCtrl.createCategory));
 router.put('/categories/:id', asyncHandler(portalCtrl.updateCategory));

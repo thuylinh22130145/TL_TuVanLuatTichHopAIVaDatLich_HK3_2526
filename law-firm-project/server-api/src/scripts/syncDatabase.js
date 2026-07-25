@@ -3,7 +3,7 @@ import '../models/index.js';
 
 async function run() {
   await connectDatabase();
-  await sequelize.sync({ force: false, alter: true });
+  await sequelize.sync();
   console.log('[DB] Tables synced');
   process.exit(0);
 }

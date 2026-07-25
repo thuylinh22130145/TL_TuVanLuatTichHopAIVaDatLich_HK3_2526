@@ -13,6 +13,10 @@ export async function updateUserStatus(id, status) {
   return unwrapData(await apiClient.patch(`${API_PATHS.admin.users}/${id}/status`, { status }));
 }
 
+export async function deleteUserAccount(id) {
+  await apiClient.delete(`${API_PATHS.admin.users}/${id}`);
+}
+
 export async function fetchCategories() {
   return unwrapData(await apiClient.get(API_PATHS.admin.categories)) || [];
 }

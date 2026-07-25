@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import {
+  deleteLawyerAppointment,
   fetchLawyerAppointments,
   updateLawyerAppointmentStatus,
 } from '../../services/appointmentService';
@@ -23,6 +24,7 @@ export default function LawyerDashboard() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
@@ -53,10 +55,20 @@ export default function LawyerDashboard() {
       reason = window.prompt(nextStatus === 'REJECTED' ? 'Lý do từ chối lịch:' : 'Lý do hủy lịch:');
       if (reason === null) return;
     }
+    if (['REJECTED', 'CANCELLED'].includes(nextStatus) && !reason.trim()) {
+      setError('Vui lòng nhập lý do từ chối hoặc hủy lịch.');
+      return;
+    }
     setUpdatingId(appointment.id);
     setError('');
+    setMessage('');
     try {
       const updated = await updateLawyerAppointmentStatus(appointment.id, nextStatus, reason);
+      setMessage(
+        updated.emailSent
+          ? 'Đã cập nhật lịch và gửi email cho khách hàng.'
+          : 'Đã cập nhật lịch nhưng chưa gửi được email cho khách hàng.'
+      );
       if (filter && updated.statusCode !== filter) {
         setAppointments((current) => current.filter((item) => item.id !== updated.id));
       } else {
@@ -64,6 +76,36 @@ export default function LawyerDashboard() {
       }
     } catch (requestError) {
       setError(requestError.response?.data?.message || requestError.message || 'Không cập nhật được trạng thái.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const removeAppointment = async (appointment) => {
+    if (!window.confirm(
+      'Xóa vĩnh viễn lịch ' + appointment.code +
+      '? Khách hàng sẽ nhận được email thông báo.'
+    )) return;
+
+    setUpdatingId(appointment.id);
+    setError('');
+    setMessage('');
+    try {
+      const result = await deleteLawyerAppointment(appointment.id);
+      setAppointments((current) =>
+        current.filter((item) => item.id !== appointment.id)
+      );
+      setMessage(
+        result.emailSent
+          ? 'Đã xóa lịch và gửi email cho khách hàng.'
+          : 'Đã xóa lịch nhưng chưa gửi được email cho khách hàng.'
+      );
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message ||
+        requestError.message ||
+        'Không xóa được lịch hẹn.'
+      );
     } finally {
       setUpdatingId(null);
     }
@@ -105,6 +147,7 @@ export default function LawyerDashboard() {
         </div>
 
         {error && <p className='mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700'>{error}</p>}
+        {message && <p className='mb-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700'>{message}</p>}
 
         <section className='overflow-hidden rounded-2xl bg-white shadow-sm'>
           {loading ? (
@@ -141,6 +184,15 @@ export default function LawyerDashboard() {
                             <button disabled={updatingId === appointment.id} onClick={() => changeStatus(appointment, 'COMPLETED')} className='rounded-lg bg-law-navy px-3 py-2 text-sm font-semibold text-white'>Hoàn thành</button>
                             <button disabled={updatingId === appointment.id} onClick={() => changeStatus(appointment, 'CANCELLED')} className='rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600'>Hủy lịch</button>
                           </>
+                        )}
+                        {['REJECTED', 'CANCELLED', 'COMPLETED'].includes(appointment.statusCode) && (
+                          <button
+                            disabled={updatingId === appointment.id}
+                            onClick={() => removeAppointment(appointment)}
+                            className='rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-700'
+                          >
+                            Xóa lịch
+                          </button>
                         )}
                       </div>
                     </div>

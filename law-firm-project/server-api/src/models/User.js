@@ -60,6 +60,11 @@ export const User = sequelize.define(
       defaultValue: 'ACTIVE',
     },
 
+    email_verified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     last_login: {
       type: DataTypes.DATE,
       allowNull: true,

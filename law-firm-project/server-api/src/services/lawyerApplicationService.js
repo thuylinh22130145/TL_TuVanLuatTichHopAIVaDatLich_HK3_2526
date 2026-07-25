@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { sequelize } from '../config/database.js';
 import { LawyerApplication, Lawyer, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
+import { sendLawyerApplicationDecision } from './emailService.js';
 
 export async function createLawyerApplication(payload) {
   return sequelize.transaction(async (transaction) => {
@@ -72,15 +73,33 @@ export async function getLawyerApplicationById(id) {
   return application;
 }
 
-export async function approveLawyerApplication(id, reviewerId, review_note = null) {
-  return sequelize.transaction(async (transaction) => {
-    const application = await LawyerApplication.findByPk(id, { transaction });
-    if (!application) throw new ApiError(404, 'Không tìm thấy hồ sơ đăng ký luật sư.');
-    if (application.status !== 'pending') throw new ApiError(400, 'Hồ sơ đã được xử lý trước đó.');
+async function sendDecisionNotification(application) {
+  try {
+    await sendLawyerApplicationDecision({
+      email: application.email,
+      fullName: application.full_name,
+      status: application.status,
+      reviewNote: application.review_note,
+    });
+    return true;
+  } catch (error) {
+    console.error(
+      '[Lawyer Application] Đã cập nhật hồ sơ nhưng không gửi được email:',
+      error.message
+    );
+    return false;
+  }
+}
 
-    const user = application.user_id
-      ? await User.findByPk(application.user_id, { transaction })
-      : await User.findOne({ where: { email: application.email }, transaction });
+export async function approveLawyerApplication(id, reviewerId, review_note = null) {
+  const application = await sequelize.transaction(async (transaction) => {
+    const row = await LawyerApplication.findByPk(id, { transaction });
+    if (!row) throw new ApiError(404, 'Không tìm thấy hồ sơ đăng ký luật sư.');
+    if (row.status !== 'pending') throw new ApiError(400, 'Hồ sơ đã được xử lý trước đó.');
+
+    const user = row.user_id
+      ? await User.findByPk(row.user_id, { transaction })
+      : await User.findOne({ where: { email: row.email }, transaction });
 
     if (!user) throw new ApiError(400, 'Không tìm thấy tài khoản ứng viên để kích hoạt vai trò luật sư.');
 
@@ -91,40 +110,55 @@ export async function approveLawyerApplication(id, reviewerId, review_note = nul
 
     const lawyerPayload = {
       user_id: user.id,
-      full_name: application.full_name || user.full_name,
+      full_name: row.full_name || user.full_name,
       title: 'Luật sư',
-      email: application.email,
-      phone: application.phone,
-      bio: application.message || null,
-      specialization: application.specialization,
-      experience_years: application.experience_years || 0,
+      email: row.email,
+      phone: row.phone,
+      bio: row.message || null,
+      specialization: row.specialization,
+      experience_years: row.experience_years || 0,
       status: 'active',
     };
 
-    const existingLawyer = await Lawyer.findOne({ where: { user_id: user.id }, transaction });
-    if (existingLawyer) await existingLawyer.update(lawyerPayload, { transaction });
-    else await Lawyer.create(lawyerPayload, { transaction });
+    const existingLawyer = await Lawyer.findOne({
+      where: { user_id: user.id },
+      transaction,
+    });
+    if (existingLawyer) {
+      await existingLawyer.update(lawyerPayload, { transaction });
+    } else {
+      await Lawyer.create(lawyerPayload, { transaction });
+    }
 
-    await application.update({
+    await row.update({
       status: 'approved',
       reviewed_by: reviewerId || null,
       reviewed_at: new Date(),
       review_note,
     }, { transaction });
 
-    return application;
+    return row;
   });
+
+  const email_sent = await sendDecisionNotification(application);
+  return { application, email_sent };
 }
 
 export async function rejectLawyerApplication(id, reviewerId, review_note = null) {
-  const application = await getLawyerApplicationById(id);
-  if (application.status !== 'pending') throw new ApiError(400, 'Hồ sơ đã được xử lý trước đó.');
+  const application = await sequelize.transaction(async (transaction) => {
+    const row = await LawyerApplication.findByPk(id, { transaction });
+    if (!row) throw new ApiError(404, 'Không tìm thấy hồ sơ đăng ký luật sư.');
+    if (row.status !== 'pending') throw new ApiError(400, 'Hồ sơ đã được xử lý trước đó.');
 
-  await application.update({
-    status: 'rejected',
-    reviewed_by: reviewerId || null,
-    reviewed_at: new Date(),
-    review_note,
+    await row.update({
+      status: 'rejected',
+      reviewed_by: reviewerId || null,
+      reviewed_at: new Date(),
+      review_note,
+    }, { transaction });
+    return row;
   });
-  return application;
+
+  const email_sent = await sendDecisionNotification(application);
+  return { application, email_sent };
 }

@@ -22,3 +22,5 @@ body *:not(code):not(pre):not(kbd):not(samp) {
   font-kerning: none;
   font-variant-ligatures: none;
 }
+
+.register-otp-field{max-width:420px;width:100%;margin:0 auto}.register-otp-input{text-align:center;font-size:1.35rem;font-weight:700;letter-spacing:.45rem}

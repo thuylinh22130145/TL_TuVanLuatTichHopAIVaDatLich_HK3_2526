@@ -14,11 +14,33 @@ export async function getOne(req, res) {
 export async function updateStatus(req, res) {
   const { status, reason } = req.body;
   if (!status) throw new ApiError(400, 'Vui lòng cung cấp trạng thái mới.');
-  const booking = await bookingService.updateLawyerBookingStatus(
+  const result = await bookingService.updateLawyerBookingStatus(
     req.user.id,
     req.params.id,
     status,
     reason ?? null
   );
-  res.json({ success: true, data: booking.toJSON(), message: 'Đã cập nhật trạng thái lịch hẹn.' });
+  res.json({
+    success: true,
+    data: result.booking.toJSON(),
+    email_sent: result.email_sent,
+    message: result.email_sent
+      ? 'Đã cập nhật lịch hẹn và gửi email cho khách hàng.'
+      : 'Đã cập nhật lịch hẹn nhưng chưa gửi được email cho khách hàng.',
+  });
+}
+
+
+export async function remove(req, res) {
+  const result = await bookingService.deleteLawyerBooking(
+    req.user.id,
+    req.params.id
+  );
+  res.json({
+    success: true,
+    email_sent: result.email_sent,
+    message: result.email_sent
+      ? 'Đã xóa lịch hẹn và gửi email cho khách hàng.'
+      : 'Đã xóa lịch hẹn nhưng chưa gửi được email cho khách hàng.',
+  });
 }

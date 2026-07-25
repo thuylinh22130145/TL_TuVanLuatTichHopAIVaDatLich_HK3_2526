@@ -12,6 +12,7 @@ CREATE TABLE users (
     avatar_url VARCHAR(500),
     role ENUM('ADMIN', 'LAWYER', 'USER') NOT NULL DEFAULT 'USER',
     status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+    email_verified_at DATETIME NULL,
     last_login DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -23,6 +24,21 @@ CREATE TABLE staffs (
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE email_otps (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    purpose ENUM('REGISTER') NOT NULL DEFAULT 'REGISTER',
+    code_hash VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    attempts INT UNSIGNED NOT NULL DEFAULT 0,
+    consumed_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email_otps_user (user_id, purpose, created_at),
+    INDEX idx_email_otps_expiry (expires_at),
+    CONSTRAINT fk_email_otps_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE legal_categories (

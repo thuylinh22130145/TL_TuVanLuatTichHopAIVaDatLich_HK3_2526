@@ -13,6 +13,7 @@ import { LawEmbedding } from './LawEmbedding.js';
 import { ChatSession } from './ChatSession.js';
 import { ChatMessage } from './ChatMessage.js';
 import { Notification } from './Notification.js';
+import { EmailOtp } from './EmailOtp.js';
 
 User.hasOne(Lawyer, { foreignKey: 'user_id', as: 'lawyerProfile' });
 Lawyer.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -68,15 +69,17 @@ ChatMessage.belongsTo(ChatSession, { foreignKey: 'session_id', as: 'session' });
 
 User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(EmailOtp, { foreignKey: 'user_id', as: 'emailOtps', onDelete: 'CASCADE' });
+EmailOtp.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: 'CASCADE' });
 
 export {
   User, Staff, Lawyer, Booking, LawyerApplication, LegalCategory,
   LawyerSpecialization, LawyerSchedule, LawyerReview, LawDocument,
-  DocumentChunk, LawEmbedding, ChatSession, ChatMessage, Notification,
+  DocumentChunk, LawEmbedding, ChatSession, ChatMessage, Notification, EmailOtp,
 };
 
 export default {
   User, Staff, Lawyer, Booking, LawyerApplication, LegalCategory,
   LawyerSpecialization, LawyerSchedule, LawyerReview, LawDocument,
-  DocumentChunk, LawEmbedding, ChatSession, ChatMessage, Notification,
+  DocumentChunk, LawEmbedding, ChatSession, ChatMessage, Notification, EmailOtp,
 };

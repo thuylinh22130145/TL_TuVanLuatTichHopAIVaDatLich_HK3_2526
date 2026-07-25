@@ -2,17 +2,20 @@ import { apiClient } from './api';
 
 const authService = {
   async login(username, password) {
-    const res = await apiClient.post('/auth/login', {
-      username,
-      password,
-    });
-
+    const res = await apiClient.post('/auth/login', { username, password });
     return res.data.data;
   },
 
   async register(data) {
     const res = await apiClient.post('/auth/register', data);
+    return res.data.data;
+  },
 
+  async verifyRegistrationOtp(challengeToken, otp) {
+    const res = await apiClient.post('/auth/verify-register-otp', {
+      challenge_token: challengeToken,
+      otp,
+    });
     return res.data.data;
   },
 

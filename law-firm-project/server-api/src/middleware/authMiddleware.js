@@ -20,6 +20,10 @@ export async function requireAuth(req, res, next) {
 
     const decoded = jwt.verify(token, env.jwt.secret);
 
+    if (decoded.type && decoded.type !== 'access') {
+      throw new ApiError(401, 'Token không đúng mục đích sử dụng.');
+    }
+
     const user = await User.findByPk(decoded.id, {
       attributes: {
         exclude: ['password_hash'],
@@ -104,6 +108,9 @@ export async function optionalAuth(req, res, next) {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, env.jwt.secret);
+    if (decoded.type && decoded.type !== 'access') {
+      return next();
+    }
     const user = await User.findByPk(decoded.id, {
       attributes: {
         exclude: ['password_hash'],

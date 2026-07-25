@@ -11,6 +11,7 @@ export default function LawyerApplicationsTab() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [savingId, setSavingId] = useState(null);
 
   const loadApplications = useCallback(async () => {
@@ -34,11 +35,29 @@ export default function LawyerApplicationsTab() {
     const label = action === 'approve' ? 'duyệt' : 'từ chối';
     if (!window.confirm('Bạn chắc chắn muốn ' + label + ' hồ sơ này?')) return;
 
+    let reviewNote = null;
+    if (action === 'reject') {
+      reviewNote = window.prompt('Nhập lý do từ chối để gửi cho ứng viên:');
+      if (reviewNote === null) return;
+      reviewNote = reviewNote.trim();
+      if (!reviewNote) {
+        setError('Vui lòng nhập lý do từ chối hồ sơ.');
+        return;
+      }
+    }
+
     setSavingId(id);
     setError('');
+    setNotice('');
     try {
-      if (action === 'approve') await lawyerService.approveLawyerApplication(id);
-      else await lawyerService.rejectLawyerApplication(id);
+      const result = action === 'approve'
+        ? await lawyerService.approveLawyerApplication(id)
+        : await lawyerService.rejectLawyerApplication(id, reviewNote);
+      setNotice(
+        result.email_sent
+          ? 'Đã cập nhật hồ sơ và gửi email thông báo cho ứng viên.'
+          : 'Đã cập nhật hồ sơ nhưng chưa gửi được email thông báo.'
+      );
       await loadApplications();
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Thao tác thất bại.');
@@ -54,6 +73,7 @@ export default function LawyerApplicationsTab() {
       </p>
 
       {error && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+      {notice && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{notice}</div>}
 
       <div className="card overflow-x-auto">
         {loading ? (

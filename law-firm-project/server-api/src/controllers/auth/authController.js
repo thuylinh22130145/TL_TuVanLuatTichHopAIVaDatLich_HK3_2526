@@ -1,29 +1,11 @@
 import * as authService from '../../services/authService.js';
 import { ApiError } from '../../utils/ApiError.js';
 
-/**
- * Đăng ký tài khoản
- * POST /api/auth/register
- */
 export async function register(req, res) {
-  const {
-    username,
-    email,
-    password,
-    full_name,
-    phone,
-  } = req.body;
+  const { username, email, password, full_name, phone } = req.body;
 
-  if (
-    !username ||
-    !email ||
-    !password ||
-    !full_name
-  ) {
-    throw new ApiError(
-      400,
-      'Vui lòng nhập đầy đủ thông tin.'
-    );
+  if (!username || !email || !password || !full_name) {
+    throw new ApiError(400, 'Vui lòng nhập đầy đủ thông tin.');
   }
 
   const result = await authService.register({
@@ -36,15 +18,30 @@ export async function register(req, res) {
 
   res.status(201).json({
     success: true,
-    message: 'Đăng ký thành công.',
+    message: 'Mã OTP đã được gửi đến email đăng ký.',
     data: result,
   });
 }
 
-/**
- * Đăng nhập
- * POST /api/auth/login
- */
+export async function verifyRegistrationOtp(req, res) {
+  const { challenge_token, otp } = req.body;
+
+  if (!challenge_token || !/^\d{6}$/.test(String(otp))) {
+    throw new ApiError(400, 'Vui lòng nhập mã OTP gồm 6 chữ số.');
+  }
+
+  const result = await authService.verifyRegistrationOtp(
+    challenge_token,
+    String(otp)
+  );
+
+  res.status(200).json({
+    success: true,
+    message: 'Xác thực email và đăng ký tài khoản thành công.',
+    data: result,
+  });
+}
+
 export async function login(req, res) {
   const { username, password } = req.body;
 
@@ -55,10 +52,7 @@ export async function login(req, res) {
     );
   }
 
-  const result = await authService.login(
-    username,
-    password
-  );
+  const result = await authService.login(username, password);
 
   res.status(200).json({
     success: true,
@@ -67,26 +61,11 @@ export async function login(req, res) {
   });
 }
 
-/**
- * Lấy thông tin tài khoản hiện tại
- * GET /api/auth/profile
- */
 export async function profile(req, res) {
   const user = await authService.getProfile(req.user.id);
-
-  res.json({
-    success: true,
-    data: user,
-  });
+  res.json({ success: true, data: user });
 }
 
-/**
- * Đăng xuất
- * POST /api/auth/logout
- *
- * JWT không cần xóa phía server.
- * Frontend chỉ cần xóa token.
- */
 export async function logout(req, res) {
   res.json({
     success: true,

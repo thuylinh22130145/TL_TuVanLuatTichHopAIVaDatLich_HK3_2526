@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchUsers, updateUserStatus } from '../../services/adminPortalService';
+import { deleteUserAccount, fetchUsers, updateUserStatus } from '../../services/adminPortalService';
 
 const ROLE_LABELS = { ADMIN: 'Quản trị viên', LAWYER: 'Luật sư', USER: 'Khách hàng' };
 
@@ -10,6 +10,7 @@ export default function AdminUsersPage() {
   const [filters, setFilters] = useState({ search: '', role: '', status: '' });
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -41,6 +42,25 @@ export default function AdminUsersPage() {
       setError(requestError.response?.data?.message || requestError.message);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const deleteAccount = async (account) => {
+    const roleLabel = ROLE_LABELS[account.role]?.toLowerCase() || 'tài khoản';
+    if (!window.confirm(
+      'Xóa vĩnh viễn ' + roleLabel + ' ' + account.username +
+      '? Hành động này không thể hoàn tác.'
+    )) return;
+
+    setDeletingId(account.id);
+    setError('');
+    try {
+      await deleteUserAccount(account.id);
+      setUsers((current) => current.filter((item) => item.id !== account.id));
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -77,7 +97,26 @@ export default function AdminUsersPage() {
                 <td className='py-4 pr-4'><span className='rounded-full bg-law-gold/10 px-3 py-1 text-xs font-semibold text-law-gold'>{ROLE_LABELS[account.role]}</span></td>
                 <td className='py-4 pr-4 text-xs text-slate-600'>{account.lawyerProfile ? <><p>{account.lawyerProfile.specialization}</p><p>{account.lawyerProfile.availability_status}</p></> : '—'}</td>
                 <td className='py-4 pr-4'><span className={`rounded-full px-3 py-1 text-xs font-semibold ${account.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{account.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}</span></td>
-                <td className='py-4'><button disabled={updatingId === account.id || account.id === currentUser?.id} onClick={() => toggleStatus(account)} className={`text-sm font-semibold disabled:cursor-not-allowed disabled:text-slate-300 ${account.status === 'ACTIVE' ? 'text-red-600' : 'text-emerald-600'}`}>{account.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}</button></td>
+                <td className='py-4'>
+                  <div className='flex items-center gap-3'>
+                    <button
+                      disabled={updatingId === account.id || deletingId === account.id || account.id === currentUser?.id}
+                      onClick={() => toggleStatus(account)}
+                      className={`text-sm font-semibold disabled:cursor-not-allowed disabled:text-slate-300 ${account.status === 'ACTIVE' ? 'text-red-600' : 'text-emerald-600'}`}
+                    >
+                      {account.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+                    </button>
+                    {['USER', 'LAWYER'].includes(account.role) && (
+                      <button
+                        disabled={deletingId === account.id || updatingId === account.id}
+                        onClick={() => deleteAccount(account)}
+                        className='text-sm font-semibold text-red-700 disabled:cursor-not-allowed disabled:text-slate-300'
+                      >
+                        {deletingId === account.id ? 'Đang xóa...' : 'Xóa'}
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}</tbody>
           </table>

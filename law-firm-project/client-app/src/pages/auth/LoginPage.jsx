@@ -6,48 +6,39 @@ import "./LoginPage.css";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     const normalizedUsername = username.trim();
     if (!normalizedUsername || !password) {
-      setError('Vui l�ng nh?p t�n dang nh?p v� m?t kh?u.');
+      setError("Vui lòng nhập tên đăng nhập và mật khẩu.");
       return;
     }
 
-    setLoading(true);
-    setError("");
-
     try {
+      setLoading(true);
+      setError("");
       const result = await login(normalizedUsername, password);
-
-      switch (result.user.role) {
-        case "ADMIN":
-          navigate("/admin/dashboard", { replace: true });
-          break;
-
-        case "LAWYER":
-          navigate("/lawyer/dashboard", { replace: true });
-          break;
-
-        case "USER":
-          navigate("/user/home", { replace: true });
-          break;
-
-        default:
-          setError("Invalid account role.");
+      const destinations = {
+        ADMIN: "/admin/dashboard",
+        LAWYER: "/lawyer/dashboard",
+        USER: "/user/home",
+      };
+      const destination = destinations[result.user.role];
+      if (!destination) {
+        setError("Vai trò tài khoản không hợp lệ.");
+        return;
       }
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          '�ang nh?p th?t b?i.'
+          "Đăng nhập thất bại."
       );
     } finally {
       setLoading(false);
@@ -70,7 +61,6 @@ export default function LoginPage() {
         <div className="login-form-shell">
           <h2 className="login-title">Chào mừng trở lại</h2>
           <p className="login-subtitle">Nhập tài khoản để tiếp tục sử dụng dịch vụ.</p>
-
           {error && <div className="login-error">{error}</div>}
 
           <form onSubmit={handleSubmit}>
@@ -81,7 +71,7 @@ export default function LoginPage() {
                 required
                 autoComplete="username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(event) => setUsername(event.target.value)}
                 placeholder="Nhập tên đăng nhập"
               />
             </div>
@@ -94,7 +84,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Nhập mật khẩu"
               />
             </div>
@@ -106,9 +96,7 @@ export default function LoginPage() {
 
           <p className="login-footer">
             Chưa có tài khoản?
-            <Link className="login-link" to="/register">
-              Đăng ký ngay
-            </Link>
+            <Link className="login-link" to="/register">Đăng ký ngay</Link>
           </p>
         </div>
       </div>

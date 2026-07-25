@@ -3,6 +3,7 @@ import { Booking, Lawyer, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateUniqueBookingCode } from '../utils/bookingCode.js';
 import { BOOKING_STATUSES } from '../models/Booking.js';
+import { sendBookingStatusNotification } from './emailService.js';
 
 const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED'];
 const CUSTOMER_EDITABLE_STATUSES = ['PENDING'];
@@ -208,19 +209,72 @@ export async function getLawyerBooking(userId, bookingId) {
   const lawyer = await getLawyerProfile(userId);
   const booking = await Booking.findOne({
     where: { id: bookingId, lawyer_id: lawyer.id },
-    include: [{ model: User, as: 'customer', attributes: ['id', 'full_name', 'email', 'phone'] }],
+    include: [
+      { model: User, as: 'customer', attributes: ['id', 'full_name', 'email', 'phone'] },
+      { model: Lawyer, as: 'lawyer', attributes: ['id', 'full_name', 'email', 'phone'] },
+    ],
   });
   if (!booking) throw new ApiError(404, 'Không tìm thấy lịch hẹn của luật sư.');
   return booking;
 }
 
+async function sendLawyerBookingNotification(booking, status) {
+  try {
+    await sendBookingStatusNotification({
+      email: booking.customer_email,
+      customerName: booking.customer_name,
+      lawyerName: booking.lawyer?.full_name,
+      bookingCode: booking.booking_code,
+      appointmentDate: booking.appointment_date,
+      status,
+      reason: booking.cancellation_reason,
+    });
+    return true;
+  } catch (error) {
+    console.error(
+      '[Booking] Đã cập nhật lịch nhưng không gửi được email:',
+      error.message
+    );
+    return false;
+  }
+}
+
 export async function updateLawyerBookingStatus(userId, bookingId, nextStatus, reason = null) {
-  if (!BOOKING_STATUSES.includes(nextStatus)) throw new ApiError(400, 'Trạng thái không hợp lệ.');
+  if (!BOOKING_STATUSES.includes(nextStatus)) {
+    throw new ApiError(400, 'Trạng thái không hợp lệ.');
+  }
   const booking = await getLawyerBooking(userId, bookingId);
   const allowed = LAWYER_TRANSITIONS[booking.status] || [];
   if (!allowed.includes(nextStatus)) {
-    throw new ApiError(409, `Không thể chuyển trạng thái từ ${booking.status} sang ${nextStatus}.`);
+    throw new ApiError(
+      409,
+      `Không thể chuyển trạng thái từ ${booking.status} sang ${nextStatus}.`
+    );
   }
-  await booking.update({ status: nextStatus, cancellation_reason: reason });
-  return getLawyerBooking(userId, bookingId);
+  if (['REJECTED', 'CANCELLED'].includes(nextStatus) && !reason?.trim()) {
+    throw new ApiError(400, 'Vui lòng nhập lý do từ chối hoặc hủy lịch.');
+  }
+
+  await booking.update({
+    status: nextStatus,
+    cancellation_reason: reason?.trim() || null,
+  });
+  const updatedBooking = await getLawyerBooking(userId, bookingId);
+  const email_sent = await sendLawyerBookingNotification(updatedBooking, nextStatus);
+  return { booking: updatedBooking, email_sent };
+}
+
+export async function deleteLawyerBooking(userId, bookingId) {
+  const booking = await getLawyerBooking(userId, bookingId);
+  if (!['REJECTED', 'CANCELLED', 'COMPLETED'].includes(booking.status)) {
+    throw new ApiError(
+      409,
+      'Chỉ được xóa lịch đã từ chối, đã hủy hoặc đã hoàn thành.'
+    );
+  }
+
+  const snapshot = booking.toJSON();
+  await booking.destroy();
+  const email_sent = await sendLawyerBookingNotification(booking, 'DELETED');
+  return { booking: snapshot, email_sent };
 }

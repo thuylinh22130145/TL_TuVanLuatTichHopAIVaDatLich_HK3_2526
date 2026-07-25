@@ -6,12 +6,9 @@ import './src/models/index.js';
 async function start() {
   try {
     await connectDatabase();
-    // SQLite: không dùng alter (tránh lỗi FK khi migrate)
-    const syncOptions =
-      env.db.dialect === 'mysql' && env.nodeEnv === 'development'
-        ? { alter: true }
-        : {};
-    await sequelize.sync(syncOptions);
+    // Chỉ tạo bảng còn thiếu. Không tự động alter vì Sequelize có thể
+    // tạo lặp unique index trong MySQL sau mỗi lần khởi động.
+    await sequelize.sync();
 
     app.listen(env.port, () => {
       console.log(`[API] server-api listening on http://localhost:${env.port}`);

@@ -80,5 +80,11 @@ export async function updateLawyerAppointmentStatus(id, status, reason = null) {
     status,
     reason,
   });
-  return mapBookingFromApi(unwrapData(res));
+  const booking = mapBookingFromApi(unwrapData(res));
+  return { ...booking, emailSent: Boolean(res.data?.email_sent) };
+}
+
+export async function deleteLawyerAppointment(id) {
+  const res = await apiClient.delete(`${API_PATHS.lawyer.bookings}/${id}`);
+  return { emailSent: Boolean(res.data?.email_sent) };
 }

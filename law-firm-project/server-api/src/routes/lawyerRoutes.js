@@ -15,5 +15,6 @@ router.put('/schedules', asyncHandler(portalController.replaceSchedules));
 router.get('/bookings', asyncHandler(bookingController.list));
 router.get('/bookings/:id', asyncHandler(bookingController.getOne));
 router.patch('/bookings/:id/status', asyncHandler(bookingController.updateStatus));
+router.delete('/bookings/:id', asyncHandler(bookingController.remove));
 
 export default router;

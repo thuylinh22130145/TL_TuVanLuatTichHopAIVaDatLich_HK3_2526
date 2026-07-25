@@ -17,6 +17,21 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-only-jwt-secret-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+    otpExpiresIn: process.env.JWT_OTP_EXPIRES_IN || '5m',
+  },
+  otp: {
+    expiresMinutes: Number(process.env.OTP_EXPIRES_MINUTES) || 5,
+    maxAttempts: Number(process.env.OTP_MAX_ATTEMPTS) || 5,
+  },
+  mail: {
+    host: process.env.MAIL_HOST || 'smtp.gmail.com',
+    port: Number(process.env.MAIL_PORT) || 587,
+    secure: process.env.MAIL_SECURE === 'true',
+    user: process.env.MAIL_USER === '22130145@st.hcmuaf.edu'
+      ? '22130145@st.hcmuaf.edu.vn'
+      : process.env.MAIL_USER || '22130145@st.hcmuaf.edu.vn',
+    password: process.env.MAIL_PASSWORD || 'lhrymxbdpkoepfxm',
+    fromName: process.env.MAIL_FROM_NAME || 'Tư vấn pháp lý AI',
   },
   ai: {
     serviceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',

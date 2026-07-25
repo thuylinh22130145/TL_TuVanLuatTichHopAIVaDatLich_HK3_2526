@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { Booking, LawDocument, Lawyer, LawyerApplication, LegalCategory, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
+import { sequelize } from '../config/database.js';
 
 export async function getOverview() {
   const [users, customers, lawyerAccounts, activeLawyers, pendingApplications, bookings, pendingBookings, confirmedBookings, completedBookings, categories, documents] = await Promise.all([
@@ -57,6 +58,56 @@ export async function updateUserStatus(adminId, userId, status) {
   if (!user) throw new ApiError(404, 'Không tìm thấy tài khoản.');
   await user.update({ status });
   return user;
+}
+
+export async function deleteUserAccount(adminId, userId) {
+  if (Number(adminId) === Number(userId)) {
+    throw new ApiError(409, 'Quản trị viên không thể xóa tài khoản đang đăng nhập.');
+  }
+
+  const user = await User.findByPk(userId, {
+    include: [{
+      model: Lawyer,
+      as: 'lawyerProfile',
+      attributes: ['id'],
+      required: false,
+    }],
+  });
+
+  if (!user) {
+    throw new ApiError(404, 'Không tìm thấy tài khoản.');
+  }
+  if (!['USER', 'LAWYER'].includes(user.role)) {
+    throw new ApiError(403, 'Chỉ được xóa tài khoản người dùng hoặc luật sư.');
+  }
+
+  if (user.lawyerProfile) {
+    const bookingCount = await Booking.count({
+      where: { lawyer_id: user.lawyerProfile.id },
+    });
+    if (bookingCount > 0) {
+      throw new ApiError(
+        409,
+        'Luật sư đã có lịch hẹn nên không thể xóa. Hãy khóa tài khoản để bảo toàn dữ liệu.'
+      );
+    }
+  }
+
+  const transaction = await sequelize.transaction();
+  try {
+    if (user.lawyerProfile) {
+      await user.lawyerProfile.destroy({ transaction });
+    }
+    await user.destroy({ transaction });
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      409,
+      'Tài khoản đang được dữ liệu khác sử dụng. Hãy khóa tài khoản thay vì xóa.'
+    );
+  }
 }
 
 export async function listCategories() {
