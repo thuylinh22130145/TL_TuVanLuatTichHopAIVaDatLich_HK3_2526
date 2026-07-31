@@ -17,6 +17,20 @@ export async function createDocument(payload) {
   return unwrapData(res);
 }
 
+export async function uploadPdfDocument(payload, file) {
+  const form = new FormData();
+  form.append('doc_id', payload.doc_id);
+  form.append('title', payload.title);
+  form.append('specialization', payload.specialization);
+  form.append('file', file);
+
+  const res = await apiClient.post(`${API_PATHS.admin.documents}/upload`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  });
+  return unwrapData(res);
+}
+
 export async function updateDocument(docId, payload) {
   const res = await apiClient.put(
     `${API_PATHS.admin.documents}/${docId}`,

@@ -60,12 +60,31 @@ export default function ChatPage() {
               <ChatBubble message={message} />
 
               {message.role === 'assistant' && message.aiProvider && (
-                <div className='mx-2 mt-2 flex flex-wrap gap-2 text-xs text-law-slate'>
-                  <span className='rounded-full bg-law-navy/5 px-2 py-1'>
-                    {message.aiProvider === 'gemini' ? `Gemini · ${message.model || 'AI'}` : 'Chế độ fallback'}
-                  </span>
-                  {message.referenceTitle && (
-                    <span className='rounded-full bg-law-gold/10 px-2 py-1'>Nguồn: {message.referenceTitle}</span>
+                <div className='mx-2 mt-2 text-xs text-law-slate'>
+                  <div className='flex flex-wrap gap-2'>
+                    <span className='rounded-full bg-law-navy/5 px-2 py-1'>
+                      {message.aiProvider === 'gemini' ? `Gemini · ${message.model || 'AI'}` : 'Chế độ fallback'}
+                    </span>
+                  </div>
+
+                  {message.citations?.length > 0 && (
+                    <div className='chat-citations'>
+                      <p className='chat-citations-title'>Nguồn tham khảo</p>
+                      <ul>
+                        {message.citations.map((citation) => (
+                          <li key={`${citation.docId}-${citation.pages.join('-')}`}>
+                            <span className='font-semibold text-law-navy'>{citation.title}</span>
+                            {citation.fileName && <span> · {citation.fileName}</span>}
+                            <span>
+                              {' · '}
+                              {citation.pages.length > 0
+                                ? `Trang ${citation.pages.join(', ')}`
+                                : 'Không có số trang (tài liệu text)'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}

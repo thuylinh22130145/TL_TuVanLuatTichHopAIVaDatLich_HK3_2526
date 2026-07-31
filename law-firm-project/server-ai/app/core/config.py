@@ -15,8 +15,7 @@ class Settings(BaseSettings):
     api_key: str = 'change-me-internal-key'
     rag_similarity_threshold: float = 0.35
     gemini_api_key: str = ''
-    gemini_model: str = 'gemini-2.5-flash'
-    gemini_temperature: float = 0.2
+    gemini_model: str = 'gemini-3.6-flash'
     gemini_max_output_tokens: int = 1600
     data_dir: str = 'app/data'
 

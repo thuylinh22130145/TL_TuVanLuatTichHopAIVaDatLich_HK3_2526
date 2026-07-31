@@ -1,6 +1,6 @@
 # server-ai — FastAPI (RAG tư vấn luật)
 
-Microservice Python xử lý **Retrieval-Augmented Generation** (mock) cho văn phòng luật.
+Microservice Python xử lý **Retrieval-Augmented Generation** và sinh câu trả lời bằng **Google Gemini** cho văn phòng luật.
 
 ## Cấu trúc
 
@@ -86,10 +86,25 @@ uvicorn main:app --reload --port 8000
 
 Kiểm tra: `GET http://localhost:8000/health`
 
-## Dummy vs thật
+### Bật Google Gemini
 
-- **Thật:** đọc/ghi `app/data`, RAG retriever, nhãn chuyên môn, web fallback (tra cứu mô phỏng nguồn ngoài).
-- **Dummy:** `app/services/mock_llm.py` — ghép ngữ cảnh thành câu trả lời (thay OpenAI/Ollama khi gắn `LLM_API_KEY`).
+1. Tạo API key trong [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Thêm cấu hình vào `.env` (không commit API key):
+
+```env
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3.6-flash
+GEMINI_MAX_OUTPUT_TOKENS=1600
+```
+
+3. Khởi động lại `server-ai`, sau đó kiểm tra `/health`: `ai_provider` phải là `gemini`.
+4. Gửi câu hỏi qua web hoặc `POST /api/v1/predict-consultation`; response phải có `ai_provider: "gemini"`.
+
+## Gemini và chế độ fallback
+
+- **Gemini:** khi có `GEMINI_API_KEY`, hệ thống dùng SDK chính thức `google-genai` và model cấu hình trong `GEMINI_MODEL`.
+- **RAG:** nội dung trả lời được ràng buộc bởi văn bản tìm thấy trong `app/data`; prompt yêu cầu không tự bịa căn cứ pháp luật.
+- **Fallback:** khi chưa có key hoặc Gemini tạm lỗi, hệ thống dùng phản hồi cục bộ để ứng dụng vẫn hoạt động.
 
 ## Mở rộng sau này
 

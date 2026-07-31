@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { receivePdf } from '../middleware/pdfUploadMiddleware.js';
 
 import {
   requireAuth,
@@ -74,6 +75,8 @@ router.delete('/bookings/:id', asyncHandler(bookingCtrl.remove));
 router.get('/documents', asyncHandler(documentCtrl.list));
 
 router.get('/documents/:docId', asyncHandler(documentCtrl.getOne));
+
+router.post('/documents/upload', receivePdf, asyncHandler(documentCtrl.uploadPdf));
 
 router.post('/documents', asyncHandler(documentCtrl.create));
 

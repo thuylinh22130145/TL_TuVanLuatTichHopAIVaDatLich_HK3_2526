@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "Express API — quản trị & điều phối AI",
   "type": "module",
-  "main": "server.js",
+  "main": "server-realtime.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node server-realtime.js",
+    "dev": "node --watch server-realtime.js",
     "db:sync": "node src/scripts/syncDatabase.js",
     "db:seed": "node src/scripts/seedDatabase.js"
   },
@@ -17,9 +17,11 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
     "mysql2": "^3.11.5",
     "nodemailer": "^7.0.13",
     "sequelize": "^6.37.5",
+    "socket.io": "^4.8.3",
     "sqlite3": "^5.1.7"
   }
 }

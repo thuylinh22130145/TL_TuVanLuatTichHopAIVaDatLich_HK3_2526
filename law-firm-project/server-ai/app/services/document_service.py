@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import settings
-from app.services.document_loader import load_documents_from_directory
+from app.services.document_loader import _read_pdf, load_documents_from_directory
 from app.services.rag_retriever import retriever
 
 ALLOWED_TYPES = {"txt", "pdf"}
@@ -95,19 +95,26 @@ def create_document(payload: dict) -> dict:
         raise ValueError("file_type chỉ hỗ trợ txt hoặc pdf")
 
     target = _file_path(data_dir, safe_id, file_type)
+    meta_path = _meta_path(data_dir, safe_id)
     if target.exists():
         raise FileExistsError(f"Tài liệu {safe_id} đã tồn tại")
 
     content = payload["content"]
-    if file_type == "txt":
-        target.write_text(content, encoding="utf-8")
-    else:
-        target.write_bytes(content.encode("utf-8") if isinstance(content, str) else content)
+    try:
+        if file_type == "txt":
+            target.write_text(content, encoding="utf-8")
+        else:
+            target.write_bytes(content.encode("utf-8") if isinstance(content, str) else content)
+            _read_pdf(target)
 
-    _write_meta(_meta_path(data_dir, safe_id), payload["title"], payload["specialization"])
-    _reload_rag()
-    return get_document(safe_id)
-
+        _write_meta(meta_path, payload["title"], payload["specialization"])
+        _reload_rag()
+        return get_document(safe_id)
+    except Exception:
+        target.unlink(missing_ok=True)
+        meta_path.unlink(missing_ok=True)
+        _reload_rag()
+        raise
 
 def update_document(doc_id: str, payload: dict) -> dict:
     data_dir = settings.data_path
@@ -130,7 +137,7 @@ def update_document(doc_id: str, payload: dict) -> dict:
         if existing.suffix.lower() == ".txt":
             existing.write_text(payload["content"], encoding="utf-8")
         else:
-            existing.write_text(payload["content"], encoding="utf-8")
+            raise ValueError("Không thể sửa nội dung PDF trực tiếp; hãy xóa và tải lại file.")
 
     title = payload.get("title") or meta.get("title") or safe_id
     specialization = payload.get("specialization") or meta.get("specialization") or "Tổng quát"

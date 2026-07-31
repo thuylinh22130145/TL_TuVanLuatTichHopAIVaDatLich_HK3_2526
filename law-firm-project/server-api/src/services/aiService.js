@@ -23,6 +23,15 @@ export async function consultWithAI(message, caseContext = null) {
       model: payload.model,
       retrievalScore: payload.retrieval_score ?? 0,
       referenceTitle: payload.reference_title ?? null,
+      citations: Array.isArray(payload.citations)
+        ? payload.citations.map((citation) => ({
+            docId: citation.doc_id,
+            title: citation.title,
+            fileName: citation.file_name,
+            pages: Array.isArray(citation.pages) ? citation.pages : [],
+            snippet: citation.snippet ?? null,
+          }))
+        : [],
     };
   } catch (error) {
     const detail = error.response?.data?.detail;

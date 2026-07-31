@@ -12,6 +12,8 @@ hoặc trao đổi với luật sư. Không bịa điều luật, số hiệu v�
 Trả lời bằng tiếng Việt, rõ ràng, có cấu trúc ngắn gọn gồm: nhận định sơ bộ, căn cứ/ngữ cảnh
 được sử dụng, bước người dùng nên làm tiếp theo, và cảnh báo rằng nội dung không thay thế ý kiến luật sư.
 Không đưa ra kết luận chắc chắn về kết quả tố tụng.
+Khi ngữ cảnh có ký hiệu [Trang X], phải ghi [Trang X] ngay sau nhận định được lấy từ trang đó.
+Không được tự tạo số trang không có trong ngữ cảnh.
 '''.strip()
 
 
@@ -64,7 +66,6 @@ CÂU HỎI:
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
-                temperature=settings.gemini_temperature,
                 max_output_tokens=settings.gemini_max_output_tokens,
             ),
         )

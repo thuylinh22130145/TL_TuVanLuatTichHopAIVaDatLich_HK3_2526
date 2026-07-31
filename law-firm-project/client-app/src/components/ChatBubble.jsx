@@ -1,12 +1,14 @@
+import ReactMarkdown from 'react-markdown';
+
 export default function ChatBubble({ message }) {
   const isUser = message.role === 'user';
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] rounded-[20px] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
+        className={`max-w-[85%] rounded-[20px] px-4 py-3 text-sm leading-relaxed shadow-sm ${
           isUser
-            ? 'rounded-br-md bg-law-navy text-white'
+            ? 'whitespace-pre-wrap rounded-br-md bg-law-navy text-white'
             : 'rounded-bl-md border border-law-navy/10 bg-white text-law-navy'
         }`}
       >
@@ -15,7 +17,21 @@ export default function ChatBubble({ message }) {
             Trợ lý AI
           </span>
         )}
-        <div className="break-words">{message.content}</div>
+        {isUser ? (
+          <div className="break-words">{message.content}</div>
+        ) : (
+          <div className="chat-markdown break-words">
+            <ReactMarkdown
+              components={{
+                a: ({ node: _node, ...props }) => (
+                  <a {...props} target="_blank" rel="noreferrer" />
+                ),
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );

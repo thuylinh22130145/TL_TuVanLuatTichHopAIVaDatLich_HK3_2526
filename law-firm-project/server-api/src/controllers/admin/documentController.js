@@ -26,6 +26,22 @@ export async function create(req, res) {
   res.status(201).json({ success: true, data: doc, message: 'Đã thêm tài liệu và tải lại RAG' });
 }
 
+export async function uploadPdf(req, res) {
+  const { doc_id, title, specialization } = req.body;
+  if (!doc_id || !title || !specialization || !req.file) {
+    throw new ApiError(400, 'doc_id, title, specialization và file PDF là bắt buộc');
+  }
+
+  const doc = await documentService.uploadPdfDocument(
+    { doc_id, title, specialization },
+    req.file,
+  );
+  res.status(201).json({
+    success: true,
+    data: doc,
+    message: 'Đã tải PDF, trích xuất nội dung và nạp lại RAG',
+  });
+}
 export async function update(req, res) {
   const { title, specialization, content } = req.body;
   if (title === undefined && specialization === undefined && content === undefined) {

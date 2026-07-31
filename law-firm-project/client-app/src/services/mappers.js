@@ -116,6 +116,13 @@ export function mapChatFromApi(data) {
     model: data.model,
     retrievalScore: data.retrievalScore ?? data.retrieval_score,
     referenceTitle: data.referenceTitle ?? data.reference_title,
+    citations: (data.citations || []).map((citation) => ({
+      docId: citation.docId ?? citation.doc_id,
+      title: citation.title,
+      fileName: citation.fileName ?? citation.file_name,
+      pages: Array.isArray(citation.pages) ? citation.pages : [],
+      snippet: citation.snippet ?? null,
+    })),
     suggestedLawyers: suggested,
   };
 }

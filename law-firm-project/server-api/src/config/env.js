@@ -13,6 +13,8 @@ export const env = {
     name: process.env.DB_NAME || 'law_firm_db',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
+    connectRetries: Number(process.env.DB_CONNECT_RETRIES) || 10,
+    retryDelayMs: Number(process.env.DB_RETRY_DELAY_MS) || 2000,
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-only-jwt-secret-change-in-production',

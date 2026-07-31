@@ -1,6 +1,7 @@
 '''RAG retrieval, Gemini generation, domain classification and safe fallback.'''
 import asyncio
 
+import logging
 from app.core.config import settings
 from app.schemas.consultation import ConsultationResponse, SourceType
 from app.services.gemini_service import (
@@ -13,6 +14,9 @@ from app.services.rag_retriever import retriever
 from app.services.specialization import detect_specialization
 
 
+logger = logging.getLogger(__name__)
+
+
 async def predict_consultation(message: str, case_context: str | None = None) -> ConsultationResponse:
     query = message.strip()
     if case_context:
@@ -22,6 +26,7 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
     source: SourceType
     reference_title: str | None = None
     document_specialization: str | None = None
+    citations: list[dict] = []
 
     if retrieval.is_high_confidence and retrieval.document:
         source = 'internal_rag'
@@ -30,6 +35,16 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
         document_specialization = document.specialization
         chunks = retrieval.matched_chunks or [document.content[:3000]]
         context = f'Tài liệu: {document.title}\n\n' + '\n\n'.join(chunks)
+        snippet = ' '.join(chunks[0].split())[:320] if chunks else None
+        citations = [
+            {
+                'doc_id': document.doc_id,
+                'title': document.title,
+                'file_name': document.file_path.name,
+                'pages': retrieval.citation_pages,
+                'snippet': snippet,
+            }
+        ]
     else:
         source = 'insufficient_context'
         context = (
@@ -57,7 +72,8 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
         )
         provider = 'gemini'
         model = settings.gemini_model
-    except GeminiUnavailableError:
+    except GeminiUnavailableError as exc:
+        logger.warning('Gemini không khả dụng; chuyển sang fallback cục bộ: %s', exc)
         answer = generate_fallback_answer(
             question=message,
             context=context,
@@ -74,4 +90,5 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
         suggest_booking=source == 'insufficient_context' or specialization != 'Tổng quát',
         retrieval_score=retrieval.score,
         reference_title=reference_title,
+        citations=citations,
     )

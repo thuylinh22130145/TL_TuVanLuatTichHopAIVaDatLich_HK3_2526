@@ -30,11 +30,37 @@ function createSequelize() {
 
 export const sequelize = createSequelize();
 
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 export async function connectDatabase() {
-  await sequelize.authenticate();
-  if (env.db.dialect === 'mysql') {
-    console.log('[DB] MySQL connected:', env.db.name);
-  } else {
-    console.log('[DB] SQLite connected:', env.db.storage);
+  const attempts = Math.max(1, env.db.connectRetries);
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await sequelize.authenticate();
+      if (env.db.dialect === 'mysql') {
+        console.log(
+          `[DB] MySQL connected: ${env.db.name} (${env.db.host}:${env.db.port})`,
+        );
+      } else {
+        console.log('[DB] SQLite connected:', env.db.storage);
+      }
+      return;
+    } catch (error) {
+      if (attempt === attempts) {
+        throw new Error(
+          `Không thể kết nối ${env.db.dialect} sau ${attempts} lần: ${error.message}`,
+          { cause: error },
+        );
+      }
+
+      console.warn(
+        `[DB] Chưa kết nối được (${attempt}/${attempts}): ${error.message}. `
+          + `Thử lại sau ${env.db.retryDelayMs}ms...`,
+      );
+      await wait(env.db.retryDelayMs);
+    }
   }
 }
