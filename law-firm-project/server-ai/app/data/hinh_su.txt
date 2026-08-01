@@ -1,12 +1,69 @@
-BỘ LUẬT TỐ TỤNG HÌNH SỰ — TÓM TẮT
+BỘ LUẬT HÌNH SỰ VÀ TỐ TỤNG HÌNH SỰ — TÓM TẮT TRA CỨU
 
-Quyền của bị can, bị cáo:
-- Được biết lỗi bị khởi tố, truy tố.
-- Được có luật sư từ khi bị khởi tố về tội phạm.
-- Được bào chữa, chứng minh tình tiết giảm nhẹ.
+Nguồn pháp lý:
+- Bộ luật Hình sự số 100/2015/QH13, đã được sửa đổi, bổ sung.
+- Cơ sở dữ liệu quốc gia về văn bản pháp luật: https://vbpl.vn/vienkiemsatnhandantoicao/Pages/vbpq-toanvan.aspx?ItemID=96122
+- Luật số 86/2025/QH15 sửa đổi, bổ sung một số điều của Bộ luật Hình sự, có hiệu lực từ 01/07/2025.
 
-Thời hạn tố tụng:
-- Cơ quan điều tra, Viện kiểm sát, Tòa án phải tuân thủ thời hạn luật định.
-- Vi phạm thủ tục có thể bị loại bỏ chứng cứ.
+ĐIỀU 123 — TỘI GIẾT NGƯỜI
 
-Khuyến nghị: Thuê luật sư hình sự sớm khi có quyết định khởi tố hoặc bắt tạm giam.
+Khoản 1 Điều 123 quy định người giết người thuộc một trong các trường hợp định khung tăng nặng thì có khung hình phạt
+từ 12 năm đến 20 năm tù, tù chung thân hoặc tử hình. Điểm a khoản 1 áp dụng đối với trường hợp giết 02 người trở lên.
+Một số trường hợp khác tại khoản 1 gồm: nạn nhân dưới 16 tuổi; phụ nữ mà người phạm tội biết là có thai; người đang
+thi hành công vụ hoặc vì lý do công vụ; để thực hiện hoặc che giấu tội phạm khác; thực hiện một cách man rợ; có tổ
+chức; có tính chất côn đồ; tái phạm nguy hiểm hoặc vì động cơ đê hèn.
+
+Khoản 2 Điều 123 quy định trường hợp phạm tội không thuộc khoản 1 có khung hình phạt từ 07 năm đến 15 năm tù.
+Khoản 3 quy định người chuẩn bị phạm tội giết người có thể bị phạt tù từ 01 năm đến 05 năm.
+Khoản 4 quy định hình phạt bổ sung có thể gồm cấm hành nghề hoặc làm công việc nhất định, quản chế hoặc cấm cư trú
+từ 01 năm đến 05 năm.
+
+ÁP DỤNG ĐỐI VỚI THÔNG TIN GIẾT NHIỀU NGƯỜI
+
+Nếu kết quả điều tra và xét xử xác định một người đã cố ý giết 02 người trở lên, tình tiết này thuộc điểm a khoản 1
+Điều 123. Việc nói đã giết 5 người chưa đủ để kết luận mức án chính xác, nhưng nếu sự việc được chứng minh đúng như
+mô tả thì khung hình phạt cần được xem xét là từ 12 năm đến 20 năm tù, tù chung thân hoặc tử hình.
+
+Không được kết luận trước người đó chắc chắn nhận một hình phạt cụ thể. Cần làm rõ ít nhất: tuổi khi thực hiện hành vi;
+năng lực trách nhiệm hình sự; lỗi cố ý hay vô ý; số người thực tế tử vong; vai trò trực tiếp hay đồng phạm; giai đoạn
+chuẩn bị, chưa đạt hay đã hoàn thành; hoàn cảnh xảy ra; chứng cứ; và các tình tiết giảm nhẹ, tăng nặng hợp pháp.
+
+ĐIỀU 12 — TUỔI CHỊU TRÁCH NHIỆM HÌNH SỰ
+
+Khoản 1 Điều 12 quy định người từ đủ 16 tuổi trở lên phải chịu trách nhiệm hình sự về mọi tội phạm, trừ trường hợp
+Bộ luật có quy định khác. Khoản 2 quy định người từ đủ 14 tuổi đến dưới 16 tuổi chỉ chịu trách nhiệm hình sự đối với
+những tội được liệt kê, trong đó có tội cướp tài sản. Vì Điều 12 chỉ xác định trách nhiệm hình sự từ đủ 14 tuổi trở lên,
+người mới 12 tuổi tại thời điểm thực hiện hành vi không thuộc độ tuổi chịu trách nhiệm hình sự và không bị áp dụng
+hình phạt tù theo Bộ luật Hình sự. Tuổi thực tế vẫn phải được cơ quan có thẩm quyền xác minh bằng giấy tờ hợp lệ.
+
+ĐIỀU 168 — TỘI CƯỚP TÀI SẢN
+
+Khoản 1 Điều 168 quy định khung cơ bản từ 03 năm đến 10 năm tù đối với hành vi dùng vũ lực, đe dọa dùng vũ lực
+ngay tức khắc hoặc có hành vi khác làm người bị tấn công không thể chống cự nhằm chiếm đoạt tài sản.
+Khoản 2 quy định khung từ 07 năm đến 15 năm tù đối với các trường hợp như có tổ chức, sử dụng vũ khí hoặc thủ đoạn
+nguy hiểm, gây thương tích theo mức luật định hoặc chiếm đoạt từ 50 triệu đồng đến dưới 200 triệu đồng.
+Khoản 3 quy định khung từ 12 năm đến 20 năm tù đối với các trường hợp như chiếm đoạt từ 200 triệu đồng đến dưới
+500 triệu đồng hoặc gây thương tích theo mức luật định.
+Khoản 4 quy định khung từ 18 năm đến 20 năm tù hoặc tù chung thân khi chiếm đoạt từ 500 triệu đồng trở lên, gây
+thương tích ở mức luật định, làm chết người hoặc thuộc trường hợp đặc biệt khác được liệt kê.
+Các khung trên chỉ dùng để phân tích đối với người thuộc độ tuổi chịu trách nhiệm hình sự; không được bỏ qua Điều 12.
+
+CĂN CỨ QUYẾT ĐỊNH HÌNH PHẠT
+
+Theo Điều 50, khi quyết định hình phạt, Tòa án căn cứ quy định của Bộ luật Hình sự và cân nhắc tính chất, mức độ nguy
+hiểm của hành vi, nhân thân người phạm tội, các tình tiết giảm nhẹ và tăng nặng trách nhiệm hình sự.
+
+Đối với người dưới 18 tuổi khi phạm tội, pháp luật có nguyên tắc xử lý riêng; không áp dụng tù chung thân hoặc tử hình.
+Vì vậy tuổi tại thời điểm xảy ra hành vi là dữ kiện bắt buộc phải làm rõ trước khi phân tích mức hình phạt.
+
+QUYỀN TRONG TỐ TỤNG HÌNH SỰ
+
+Người bị buộc tội có quyền được biết lý do bị khởi tố, truy tố; tự bào chữa hoặc nhờ luật sư bào chữa; đưa ra tài liệu,
+chứng cứ và trình bày các tình tiết liên quan. Cơ quan điều tra, Viện kiểm sát và Tòa án phải thực hiện đúng trình tự,
+thủ tục tố tụng.
+
+HƯỚNG XỬ LÝ AN TOÀN
+
+Nếu còn người đang bị thương hoặc có nguy cơ tiếp tục bị xâm hại, phải ưu tiên chấm dứt nguy hiểm và tìm hỗ trợ khẩn
+cấp. Không tiếp tục gây hại, đe dọa người khác, tiêu hủy chứng cứ hoặc tìm cách che giấu hành vi. Cần trao đổi ngay với
+luật sư hình sự để được hỗ trợ phù hợp với tình trạng tố tụng và bảo đảm thực hiện đúng quyền, nghĩa vụ pháp lý.

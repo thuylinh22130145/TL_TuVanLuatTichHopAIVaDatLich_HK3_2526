@@ -11,6 +11,7 @@ router.get('/profile', asyncHandler(portalController.profile));
 router.patch('/profile', asyncHandler(portalController.updateProfile));
 router.get('/schedules', asyncHandler(portalController.schedules));
 router.put('/schedules', asyncHandler(portalController.replaceSchedules));
+router.post('/legal-search', asyncHandler(portalController.legalSearch));
 
 router.get('/bookings', asyncHandler(bookingController.list));
 router.get('/bookings/:id', asyncHandler(bookingController.getOne));

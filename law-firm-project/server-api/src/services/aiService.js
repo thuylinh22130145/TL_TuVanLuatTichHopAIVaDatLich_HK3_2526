@@ -2,20 +2,21 @@ import axios from 'axios';
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/ApiError.js';
 
-export async function consultWithAI(message, caseContext = null) {
+export async function consultWithAI(message, caseContext = null, conversationHistory = []) {
   const base = env.ai.serviceUrl.replace(/\/$/, '');
   try {
     const { data } = await axios.post(
       `${base}/api/v1/predict-consultation`,
-      { message, case_context: caseContext },
+      { message, case_context: caseContext, conversation_history: conversationHistory },
       {
         headers: { 'Content-Type': 'application/json', 'X-API-Key': env.ai.apiKey },
-        timeout: 60000,
+        timeout: 600000,
       }
     );
     const payload = data.data ?? data;
     return {
       answer: payload.answer ?? '',
+      needsMoreContext: Boolean(payload.needs_more_context),
       specialization: payload.detected_specialization ?? 'Tổng quát',
       suggestBooking: Boolean(payload.suggest_booking),
       source: payload.source,
@@ -23,6 +24,9 @@ export async function consultWithAI(message, caseContext = null) {
       model: payload.model,
       retrievalScore: payload.retrieval_score ?? 0,
       referenceTitle: payload.reference_title ?? null,
+      retrievalBackend: payload.retrieval_backend ?? 'none',
+      embeddingModel: payload.embedding_model ?? null,
+      matchedChunkCount: payload.matched_chunk_count ?? 0,
       citations: Array.isArray(payload.citations)
         ? payload.citations.map((citation) => ({
             docId: citation.doc_id,

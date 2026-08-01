@@ -26,7 +26,7 @@ export async function uploadPdfDocument(payload, file) {
 
   const res = await apiClient.post(`${API_PATHS.admin.documents}/upload`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 120000,
+    timeout: 600000,
   });
   return unwrapData(res);
 }

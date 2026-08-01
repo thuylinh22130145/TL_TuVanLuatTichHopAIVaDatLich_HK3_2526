@@ -17,7 +17,7 @@ if (-not $key) {
     throw 'API key không được để trống.'
 }
 
-$model = 'gemini-3.6-flash'
+$model = 'gemini-3.5-flash-lite'
 $env:GEMINI_API_KEY = $key
 $env:GEMINI_MODEL = $model
 

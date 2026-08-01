@@ -11,6 +11,7 @@ from app.services.rag_retriever import (
     RAGRetriever,
     _chunk_document,
     _cosine_similarity,
+    _keyword_search,
 )
 
 
@@ -102,6 +103,40 @@ class VectorRetrieverTests(unittest.TestCase):
 
         self.assertTrue(chunks)
         self.assertTrue(all(chunk.pages == (7,) for chunk in chunks))
+    def test_keyword_search_prefers_robbery_penalty_over_cross_reference(self):
+        document = LawDocument(
+            doc_id='hinh-su',
+            title='Bộ luật Hình sự',
+            specialization='Hình sự',
+            file_path=Path('hinh-su.txt'),
+            content=(
+                'Danh sách dẫn chiếu: Điều 168 (tội cướp tài sản); Điều 169.\n\n'
+                + ('Nội dung không liên quan. ' * 70)
+                + '\n\nĐiều 168. Tội cướp tài sản. Người phạm tội bị phạt tù từ 03 năm đến 10 năm.'
+            ),
+        )
+
+        result = _keyword_search('cướp tiệm vàng đi tù bao lâu', [document])
+
+        self.assertIn('phạt tù từ 03 năm đến 10 năm', result.matched_chunks[0])
+
+    def test_keyword_search_prioritizes_criminal_responsibility_age(self):
+        document = LawDocument(
+            doc_id='hinh-su',
+            title='Bộ luật Hình sự',
+            specialization='Hình sự',
+            file_path=Path('hinh-su.txt'),
+            content=(
+                'Tha tù trước thời hạn đối với tội cướp tài sản.\n\n'
+                + ('Nội dung khác. ' * 90)
+                + '\n\nĐiều 12. Tuổi chịu trách nhiệm hình sự. Người từ đủ 14 tuổi trở lên chịu trách nhiệm hình sự theo quy định.'
+            ),
+        )
+
+        result = _keyword_search('cướp tài sản, 12 tuổi, đi tù bao lâu', [document])
+
+        self.assertIn('Tuổi chịu trách nhiệm hình sự', result.matched_chunks[0])
+
     def test_keyword_fallback_is_reported_when_gemini_is_not_configured(self):
         retriever = RAGRetriever()
         retriever._documents = [

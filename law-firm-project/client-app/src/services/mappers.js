@@ -107,8 +107,9 @@ export function mapChatFromApi(data) {
   return {
     id: `msg-${Date.now()}`,
     role: 'assistant',
-    content: data.answer ?? data.content ?? '',
-    timestamp: new Date().toISOString(),
+      content: data.answer ?? data.content ?? '',
+      needsMoreContext: Boolean(data.needsMoreContext ?? data.needs_more_context),
+      timestamp: new Date().toISOString(),
     suggestBooking: Boolean(data.suggestBooking),
     specialization: data.specialization,
     source: data.source,

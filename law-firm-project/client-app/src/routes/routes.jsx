@@ -95,7 +95,7 @@ export const appRoutes = [
           { path: 'lawyers', element: <AdminSectionPage eyebrow='Đội ngũ chuyên môn' title='Quản lý luật sư' description='Theo dõi hồ sơ, chuyên môn và trạng thái sẵn sàng của luật sư.'><LawyersTab /></AdminSectionPage> },
           { path: 'lawyer-applications', element: <AdminSectionPage eyebrow='Quy trình phê duyệt' title='Hồ sơ đăng ký luật sư' description='Duyệt hoặc từ chối yêu cầu tham gia hệ thống của luật sư.'><LawyerApplicationsTab /></AdminSectionPage> },
           { path: 'appointments', element: <AdminSectionPage eyebrow='Điều phối tư vấn' title='Quản lý lịch tư vấn' description='Theo dõi và điều chỉnh lịch hẹn giữa khách hàng với luật sư.'><AppointmentsTab /></AdminSectionPage> },
-          { path: 'documents', element: <AdminSectionPage eyebrow='Knowledge Base' title='Tài liệu pháp luật và RAG' description='Quản lý dữ liệu làm căn cứ cho AI Assistant và chức năng tra cứu.'><DocumentsTab /></AdminSectionPage> },
+          { path: 'documents', element: <AdminSectionPage eyebrow='Knowledge Base' title='Tài liệu pháp luật và RAG' description='Quản lý dữ liệu làm căn cứ cho Chatbot AI và chức năng tra cứu.'><DocumentsTab /></AdminSectionPage> },
         ],
       },
     ],

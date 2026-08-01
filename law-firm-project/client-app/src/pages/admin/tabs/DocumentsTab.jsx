@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as documentService from '../../../services/documentService';
+import { fetchCategories } from '../../../services/adminPortalService';
 
 const emptyForm = {
   doc_id: '',
@@ -9,13 +10,17 @@ const emptyForm = {
   file_type: 'txt',
 };
 
-const SPECIALIZATIONS = [
-  'Hôn nhân gia đình',
-  'Đất đai',
-  'Hình sự',
+const GENERAL_SPECIALIZATION = 'Tổng quát';
+const DEFAULT_SPECIALIZATIONS = [
   'Doanh nghiệp',
+  'Dân sự',
+  'Hành chính',
+  'Hình sự',
+  'Hôn nhân và Gia đình',
   'Lao động',
-  'Tổng quát',
+  'Thuế',
+  'Đất đai',
+  GENERAL_SPECIALIZATION,
 ];
 
 function errorMessage(error, fallback) {
@@ -26,6 +31,7 @@ function errorMessage(error, fallback) {
 
 export default function DocumentsTab() {
   const [documents, setDocuments] = useState([]);
+  const [specializations, setSpecializations] = useState(DEFAULT_SPECIALIZATIONS);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [sourceType, setSourceType] = useState('pdf');
@@ -38,8 +44,20 @@ export default function DocumentsTab() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await documentService.fetchDocuments();
+      const [data, categories] = await Promise.all([
+        documentService.fetchDocuments(),
+        fetchCategories(),
+      ]);
       setDocuments(data);
+      const activeSpecializations = categories
+        .filter((category) => String(category.status || 'ACTIVE').trim().toUpperCase() !== 'INACTIVE')
+        .map((category) => category.name)
+        .filter(Boolean);
+      setSpecializations(
+        activeSpecializations.length
+          ? [...new Set([...activeSpecializations, GENERAL_SPECIALIZATION])]
+          : DEFAULT_SPECIALIZATIONS,
+      );
     } catch (requestError) {
       setError(errorMessage(requestError, 'Không tải được danh sách tài liệu'));
     } finally {
@@ -191,7 +209,10 @@ export default function DocumentsTab() {
             required
           >
             <option value="">Chọn chuyên môn</option>
-            {SPECIALIZATIONS.map((specialization) => (
+            {form.specialization && !specializations.includes(form.specialization) && (
+              <option value={form.specialization}>{form.specialization}</option>
+            )}
+            {specializations.map((specialization) => (
               <option key={specialization} value={specialization}>{specialization}</option>
             ))}
           </select>

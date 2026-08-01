@@ -1,6 +1,7 @@
 import { Booking, Lawyer, LawyerSchedule, LegalCategory, User } from '../models/index.js';
 import { sequelize } from '../config/database.js';
 import { ApiError } from '../utils/ApiError.js';
+import { consultWithAI } from './aiService.js';
 
 const profileInclude = [
   { model: User, as: 'user', attributes: ['id', 'username', 'email', 'full_name', 'phone', 'avatar_url', 'status'] },
@@ -95,4 +96,8 @@ export async function replaceSchedules(userId, items) {
     }
   });
   return listSchedules(userId);
+}
+
+export async function searchLegalKnowledge(query, caseContext = null) {
+  return consultWithAI(query, caseContext);
 }

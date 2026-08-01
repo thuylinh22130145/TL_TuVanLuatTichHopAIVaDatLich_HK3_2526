@@ -12,7 +12,8 @@ async def post_predict_consultation(
     body: ConsultationRequest,
     _: bool = Depends(verify_api_key),
 ) -> ConsultationResponse:
-    return await predict_consultation(body.message, body.case_context)
+    history = [item.model_dump() for item in body.conversation_history]
+    return await predict_consultation(body.message, body.case_context, history)
 
 
 @router.post('/consult', response_model=ConsultationResponse, summary='Alias tương thích server-api')
@@ -20,4 +21,5 @@ async def post_consult_alias(
     body: ConsultationRequest,
     _: bool = Depends(verify_api_key),
 ) -> ConsultationResponse:
-    return await predict_consultation(body.message, body.case_context)
+    history = [item.model_dump() for item in body.conversation_history]
+    return await predict_consultation(body.message, body.case_context, history)

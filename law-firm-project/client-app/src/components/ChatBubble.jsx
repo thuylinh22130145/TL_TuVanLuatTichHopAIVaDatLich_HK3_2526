@@ -14,7 +14,7 @@ export default function ChatBubble({ message }) {
       >
         {!isUser && (
           <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-law-gold">
-            Trợ lý AI
+            Chatbot AI
           </span>
         )}
         {isUser ? (

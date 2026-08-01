@@ -133,7 +133,7 @@
     word-spacing: normal !important;
 }
 
-/* Markdown trong câu trả lời của trợ lý AI. */
+/* Markdown trong câu trả lời của Chatbot AI. */
 .chat-markdown {
     line-height: 1.7;
     overflow-wrap: anywhere;

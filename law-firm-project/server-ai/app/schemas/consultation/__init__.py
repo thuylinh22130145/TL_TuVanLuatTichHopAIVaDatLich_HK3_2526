@@ -20,6 +20,11 @@ def _metadata_value(name: str, default):
     return get_retrieval_metadata().get(name, default)
 
 
+class ConversationMessage(BaseModel):
+    role: Literal['user', 'assistant']
+    content: str = Field(..., min_length=1, max_length=8000)
+
+
 class ConsultationRequest(BaseModel):
     message: str = Field(
         ...,
@@ -31,6 +36,11 @@ class ConsultationRequest(BaseModel):
         default=None,
         max_length=12000,
         description="Bối cảnh vụ việc tùy chọn",
+    )
+    conversation_history: list[ConversationMessage] = Field(
+        default_factory=list,
+        max_length=12,
+        description='Các lượt hội thoại gần nhất để AI không hỏi lại dữ kiện đã có',
     )
 
 
@@ -44,6 +54,7 @@ class Citation(BaseModel):
 
 class ConsultationResponse(BaseModel):
     answer: str
+    needs_more_context: bool = False
     source: SourceType
     ai_provider: ProviderType
     model: str | None = None

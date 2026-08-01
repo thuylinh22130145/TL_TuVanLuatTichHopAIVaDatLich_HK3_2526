@@ -29,7 +29,7 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      const reply = await sendChatMessage(text);
+      const reply = await sendChatMessage(text, messages);
       setMessages((current) => [...current, reply]);
     } catch (error) {
       setMessages((current) => [...current, {
@@ -63,7 +63,11 @@ export default function ChatPage() {
                 <div className='mx-2 mt-2 text-xs text-law-slate'>
                   <div className='flex flex-wrap gap-2'>
                     <span className='rounded-full bg-law-navy/5 px-2 py-1'>
-                      {message.aiProvider === 'gemini' ? `Gemini · ${message.model || 'AI'}` : 'Chế độ fallback'}
+                      {message.needsMoreContext
+                        ? 'Đang thu thập thông tin'
+                        : message.aiProvider === 'gemini'
+                          ? `Gemini · ${message.model || 'AI'}`
+                          : 'Chế độ dự phòng'}
                     </span>
                   </div>
 

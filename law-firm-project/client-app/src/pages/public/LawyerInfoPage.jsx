@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import LawyerCard from '../../components/LawyerCard';
 import BookingForm from '../../components/BookingForm';
 import Modal from '../../components/Modal';
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function LawyerInfoPage() {
   const { authenticated, user } = useAuth();
+  const navigate = useNavigate();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -67,6 +68,18 @@ export default function LawyerInfoPage() {
         lawyerId: selected.id,
         lawyerName: selected.name,
       });
+      if (authenticated && user?.role === 'USER') {
+        navigate('/user/home', {
+          replace: true,
+          state: {
+            bookingSuccess: {
+              code: result.code,
+              lawyerName: selected.name,
+            },
+          },
+        });
+        return;
+      }
       setBookingCode(result.code);
       setModalOpen(true);
     } catch (e) {

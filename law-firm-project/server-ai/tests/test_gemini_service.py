@@ -34,6 +34,9 @@ class GeminiServiceTests(unittest.TestCase):
         call = models.generate_content.call_args
         self.assertEqual(call.kwargs['model'], 'gemini-3.6-flash')
         self.assertIn('Ngữ cảnh pháp luật nội bộ.', call.kwargs['contents'])
+        self.assertIn('YÊU CẦU PHÂN TÍCH', call.kwargs['contents'])
+        self.assertIn('Không dừng ở việc đánh giá đủ hay thiếu ngữ cảnh', call.kwargs['contents'])
+        self.assertIn('Không hướng dẫn trốn tránh', call.kwargs['config'].system_instruction)
         self.assertEqual(call.kwargs['config'].max_output_tokens, 1200)
         self.assertIsNone(call.kwargs['config'].temperature)
 

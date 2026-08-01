@@ -31,5 +31,6 @@ export const API_PATHS = {
     bookings: '/lawyer/bookings',
     profile: '/lawyer/profile',
     schedules: '/lawyer/schedules',
+    legalSearch: '/lawyer/legal-search',
   },
 };

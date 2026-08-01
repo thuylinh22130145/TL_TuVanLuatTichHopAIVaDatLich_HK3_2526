@@ -10,7 +10,7 @@ function aiClient(contentType = 'application/json') {
   if (contentType) headers['Content-Type'] = contentType;
   return axios.create({
     baseURL: `${base}/api/v1/documents`,
-    timeout: 120000,
+    timeout: 600000,
     maxBodyLength: 30 * 1024 * 1024,
     maxContentLength: 30 * 1024 * 1024,
     headers,

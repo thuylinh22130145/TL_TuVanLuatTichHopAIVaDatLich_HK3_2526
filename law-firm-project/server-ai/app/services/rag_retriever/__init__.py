@@ -103,9 +103,10 @@ def _normalize(text: str) -> str:
 
 
 def _tokenize(text: str) -> set[str]:
+    normalized = _normalize(text).replace('đ', 'd')
     return {
         token
-        for token in _normalize(text).split()
+        for token in normalized.split()
         if len(token) > 2
     }
 
@@ -449,6 +450,9 @@ def _keyword_search(
     documents: list[LawDocument],
 ) -> RetrievalResult:
     query_tokens = _tokenize(query)
+    normalized_query = _normalize(query).replace('đ', 'd')
+    age_match = re.search(r'\b(\d{1,2})\s*tuoi\b', normalized_query)
+    stated_age = int(age_match.group(1)) if age_match else None
     best_document: LawDocument | None = None
     best_score = 0.0
     best_chunks: list[DocumentChunk] = []
@@ -464,6 +468,20 @@ def _keyword_search(
             score = len(overlap) / max(len(query_tokens), 1)
             if query_tokens & specialization_tokens:
                 score = min(1.0, score + 0.25)
+            normalized_chunk = _normalize(chunk.content).replace('đ', 'd')
+            if 'cuop' in normalized_query and 'cuop giat' not in normalized_query and 'toi cuop tai san' in normalized_chunk:
+                score += 0.2
+                if 'phat tu' in normalized_chunk:
+                    score += 0.35
+            if 'bao lau' in normalized_query and 'phat tu' in normalized_chunk:
+                score += 0.15
+            if (
+                stated_age is not None
+                and stated_age < 14
+                and 'tuoi chiu trach nhiem hinh su' in normalized_chunk
+                and 'tu du 14 tuoi' in normalized_chunk
+            ):
+                score += 0.9
             if score > best_score:
                 best_score = score
                 best_document = document

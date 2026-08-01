@@ -2,6 +2,7 @@
 import asyncio
 
 import logging
+import re
 from app.core.config import settings
 from app.schemas.consultation import ConsultationResponse, SourceType
 from app.services.gemini_service import (
@@ -9,6 +10,7 @@ from app.services.gemini_service import (
     generate_grounded_answer,
     is_gemini_configured,
 )
+from app.services.context_guard import assess_context
 from app.services.mock_llm import generate_answer as generate_fallback_answer
 from app.services.rag_retriever import retriever
 from app.services.specialization import detect_specialization
@@ -17,12 +19,66 @@ from app.services.specialization import detect_specialization
 logger = logging.getLogger(__name__)
 
 
-async def predict_consultation(message: str, case_context: str | None = None) -> ConsultationResponse:
+def _sanitize_page_citations(answer: str, allowed_pages: list[int]) -> str:
+    allowed = set(allowed_pages)
+
+    def replace(match: re.Match) -> str:
+        return match.group(0) if int(match.group(1)) in allowed else ''
+
+    return re.sub(r'\s*\[Trang\s+(\d+)\]', replace, answer, flags=re.IGNORECASE)
+
+
+def _history_text(conversation_history: list[dict] | None) -> str:
+    lines = []
+    for item in (conversation_history or [])[-12:]:
+        role = 'Người dùng' if item.get('role') == 'user' else 'Chatbot'
+        content = str(item.get('content') or '').strip()
+        if content:
+            lines.append(f'{role}: {content}')
+    return '\n'.join(lines)[-12000:]
+
+
+async def predict_consultation(
+    message: str,
+    case_context: str | None = None,
+    conversation_history: list[dict] | None = None,
+) -> ConsultationResponse:
+    assessment = assess_context(message, conversation_history)
+    if assessment.needs_more_context:
+        return ConsultationResponse(
+            answer=assessment.answer or '',
+            needs_more_context=True,
+            source='insufficient_context',
+            ai_provider='fallback',
+            model=None,
+            detected_specialization=assessment.specialization,
+            suggest_booking=False,
+            retrieval_score=0.0,
+            reference_title=None,
+            citations=[],
+            retrieval_backend='none',
+            embedding_model=None,
+            matched_chunk_count=0,
+        )
+
     query = message.strip()
+    history = _history_text(conversation_history)
+    user_history = '\n'.join(
+        str(item.get('content') or '').strip()
+        for item in (conversation_history or [])[-12:]
+        if item.get('role') == 'user'
+    )
+    if user_history:
+        query = f'{user_history}\n{query}'[-12000:]
     if case_context:
         query = f'{query}\nBối cảnh vụ việc: {case_context.strip()}'
 
-    retrieval = retriever.retrieve(query)
+    question_specialization = detect_specialization(query)
+    retrieval_query = query
+    if question_specialization != 'Tổng quát':
+        retrieval_query = f'{query}\nLĩnh vực pháp luật: {question_specialization}'
+
+    retrieval = retriever.retrieve(retrieval_query)
     source: SourceType
     reference_title: str | None = None
     document_specialization: str | None = None
@@ -53,10 +109,12 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
             'và khuyến nghị trao đổi với luật sư.'
         )
 
-    specialization = detect_specialization(
-        question=message,
-        fallback_from_doc=document_specialization,
-    )
+    specialization = question_specialization
+    if specialization == 'Tổng quát':
+        specialization = detect_specialization(
+            question=message,
+            fallback_from_doc=document_specialization,
+        )
 
     provider = 'fallback'
     model = None
@@ -69,6 +127,7 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
             context,
             source,
             case_context,
+            history,
         )
         provider = 'gemini'
         model = settings.gemini_model
@@ -81,8 +140,11 @@ async def predict_consultation(message: str, case_context: str | None = None) ->
             doc_specialization=specialization,
         )
 
+    answer = _sanitize_page_citations(answer, retrieval.citation_pages)
+
     return ConsultationResponse(
         answer=answer,
+        needs_more_context=False,
         source=source,
         ai_provider=provider,
         model=model,

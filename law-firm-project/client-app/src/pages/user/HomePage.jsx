@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -8,6 +8,7 @@ import {
   updateCustomerAppointment,
 } from '../../services/appointmentService';
 import { formatAppointmentDate } from '../../utils/bookingStatus';
+import './HomePage.css';
 
 function toLocalInput(value) {
   if (!value) return '';
@@ -18,6 +19,9 @@ function toLocalInput(value) {
 
 export default function HomePage() {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [bookingSuccess, setBookingSuccess] = useState(() => location.state?.bookingSuccess || null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,6 +43,12 @@ export default function HomePage() {
   useEffect(() => {
     loadAppointments();
   }, [loadAppointments]);
+
+  useEffect(() => {
+    if (location.state?.bookingSuccess) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const statistics = useMemo(() => ({
     total: appointments.length,
@@ -95,6 +105,23 @@ export default function HomePage() {
           </div>
           <Link to='/luat-su' className='btn-primary'>Đặt lịch mới</Link>
         </div>
+
+        {bookingSuccess && (
+          <div className='booking-success-notice' role='status'>
+            <div className='booking-success-content'>
+              <span className='booking-success-icon' aria-hidden='true'>✓</span>
+              <div>
+                <p className='booking-success-title'>Đặt lịch tư vấn thành công!</p>
+                <p className='booking-success-message'>
+                  Yêu cầu tư vấn với <strong>{bookingSuccess.lawyerName}</strong> đã được ghi nhận
+                  {bookingSuccess.code ? <> với mã <strong>{bookingSuccess.code}</strong></> : null}.
+                  {' '}Bạn có thể theo dõi trạng thái lịch hẹn ngay bên dưới.
+                </p>
+              </div>
+            </div>
+            <button type='button' onClick={() => setBookingSuccess(null)} className='booking-success-close' aria-label='Đóng thông báo'>×</button>
+          </div>
+        )}
 
         <section className='my-6 grid gap-4 sm:grid-cols-3'>
           {[
