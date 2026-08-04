@@ -17,12 +17,13 @@ function randomSuffix() {
  * Sinh mã đặt lịch dạng LAW-XXXX, đảm bảo không trùng trong bảng bookings.
  * @returns {Promise<string>}
  */
-export async function generateUniqueBookingCode() {
+export async function generateUniqueBookingCode(options = {}) {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const code = `${CODE_PREFIX}-${randomSuffix()}`;
     const existing = await Booking.findOne({
       where: { booking_code: code },
       attributes: ['id'],
+      ...options,
     });
     if (!existing) return code;
   }

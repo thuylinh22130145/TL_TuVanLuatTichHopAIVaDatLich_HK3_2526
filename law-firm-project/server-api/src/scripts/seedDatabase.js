@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { connectDatabase, sequelize } from '../config/database.js';
-import { User, Lawyer, Booking, LegalCategory } from '../models/index.js';
+import { User, Lawyer, LawyerSchedule, Booking, LegalCategory } from '../models/index.js';
 
 const CATEGORIES = [
   ['Hình sự', 'hinh-su'], ['Dân sự', 'dan-su'], ['Đất đai', 'dat-dai'],
@@ -33,10 +33,23 @@ async function run() {
       where: { username: data.username },
       defaults: { email: data.email, password_hash, full_name: data.full_name, phone: data.phone, role: 'LAWYER', status: 'ACTIVE' },
     });
-    await Lawyer.findOrCreate({
+    const [lawyer] = await Lawyer.findOrCreate({
       where: { user_id: user.id },
       defaults: { ...data, user_id: user.id, status: 'active', availability_status: 'AVAILABLE' },
     });
+    for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek += 1) {
+      for (const [startTime, endTime] of [['08:00', '12:00'], ['13:00', '17:00']]) {
+        await LawyerSchedule.findOrCreate({
+          where: {
+            lawyer_id: lawyer.id,
+            day_of_week: dayOfWeek,
+            start_time: startTime,
+            end_time: endTime,
+          },
+          defaults: { is_available: true },
+        });
+      }
+    }
   }
 
   const firstLawyer = await Lawyer.findOne();

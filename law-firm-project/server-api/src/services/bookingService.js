@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
-import { Booking, Lawyer, User } from '../models/index.js';
+import { sequelize } from '../config/database.js';
+import { Booking, Lawyer, LawyerSchedule, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateUniqueBookingCode } from '../utils/bookingCode.js';
 import { BOOKING_STATUSES } from '../models/Booking.js';
@@ -37,20 +38,77 @@ function normalizeDuration(value) {
   return duration;
 }
 
-async function ensureLawyerExists(lawyerId) {
+async function ensureLawyerExists(lawyerId, options = {}) {
   if (!lawyerId) throw new ApiError(400, 'Vui lòng chọn luật sư.');
-  const lawyer = await Lawyer.findOne({ where: { id: lawyerId, status: 'active' } });
+  const lawyer = await Lawyer.findOne({
+    where: { id: lawyerId, status: 'active' },
+    ...options,
+  });
   if (!lawyer) throw new ApiError(404, 'Không tìm thấy luật sư đang hoạt động.');
   return lawyer;
 }
 
-async function ensureNoConflict({ lawyerId, appointmentDate, durationMinutes, excludeBookingId = null }) {
+function timeToSeconds(value) {
+  const [hours, minutes, seconds = '0'] = String(value).split(':');
+  return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
+}
+
+function appointmentSchedulePosition(originalValue, parsedDate) {
+  const localInput = typeof originalValue === 'string'
+    ? originalValue.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/)
+    : null;
+
+  if (localInput) {
+    const [, year, month, day, hour, minute, second = '0'] = localInput;
+    return {
+      dayOfWeek: new Date(Number(year), Number(month) - 1, Number(day)).getDay(),
+      startSeconds: Number(hour) * 3600 + Number(minute) * 60 + Number(second),
+    };
+  }
+
+  return {
+    dayOfWeek: parsedDate.getDay(),
+    startSeconds: parsedDate.getHours() * 3600
+      + parsedDate.getMinutes() * 60
+      + parsedDate.getSeconds(),
+  };
+}
+
+async function ensureWithinWorkingSchedule({
+  lawyerId,
+  appointmentDate,
+  parsedAppointment,
+  durationMinutes,
+  transaction = null,
+}) {
+  const { dayOfWeek, startSeconds } = appointmentSchedulePosition(appointmentDate, parsedAppointment);
+  const endSeconds = startSeconds + durationMinutes * 60;
+  const schedules = await LawyerSchedule.findAll({
+    where: { lawyer_id: lawyerId, day_of_week: dayOfWeek, is_available: true },
+    attributes: ['start_time', 'end_time'],
+    transaction,
+  });
+
+  const isWithinShift = schedules.some((schedule) => (
+    startSeconds >= timeToSeconds(schedule.start_time)
+    && endSeconds <= timeToSeconds(schedule.end_time)
+  ));
+  if (!isWithinShift) {
+    throw new ApiError(409, 'Thời gian đặt lịch phải nằm trọn trong ca làm việc khả dụng của luật sư.');
+  }
+}
+
+async function ensureNoConflict({ lawyerId, appointmentDate, durationMinutes, excludeBookingId = null, transaction = null }) {
   const start = parseAppointment(appointmentDate);
   const end = new Date(start.getTime() + normalizeDuration(durationMinutes) * 60_000);
   const where = { lawyer_id: lawyerId, status: { [Op.in]: ACTIVE_STATUSES } };
   if (excludeBookingId) where.id = { [Op.ne]: excludeBookingId };
 
-  const bookings = await Booking.findAll({ where, attributes: ['id', 'appointment_date', 'duration_minutes'] });
+  const bookings = await Booking.findAll({
+    where,
+    attributes: ['id', 'appointment_date', 'duration_minutes'],
+    transaction,
+  });
   const conflict = bookings.some((booking) => {
     const existingStart = new Date(booking.appointment_date);
     const existingEnd = new Date(existingStart.getTime() + booking.duration_minutes * 60_000);
@@ -61,21 +119,34 @@ async function ensureNoConflict({ lawyerId, appointmentDate, durationMinutes, ex
 }
 
 async function createBooking(payload) {
-  await ensureLawyerExists(payload.lawyer_id);
   const appointmentDate = parseAppointment(payload.appointment_date);
   const durationMinutes = normalizeDuration(payload.duration_minutes);
-  await ensureNoConflict({
-    lawyerId: payload.lawyer_id,
-    appointmentDate,
-    durationMinutes,
-  });
+  return sequelize.transaction(async (transaction) => {
+    await ensureLawyerExists(payload.lawyer_id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    await ensureWithinWorkingSchedule({
+      lawyerId: payload.lawyer_id,
+      appointmentDate: payload.appointment_date,
+      parsedAppointment: appointmentDate,
+      durationMinutes,
+      transaction,
+    });
+    await ensureNoConflict({
+      lawyerId: payload.lawyer_id,
+      appointmentDate,
+      durationMinutes,
+      transaction,
+    });
 
-  return Booking.create({
-    ...payload,
-    appointment_date: appointmentDate,
-    duration_minutes: durationMinutes,
-    booking_code: payload.booking_code || await generateUniqueBookingCode(),
-    status: payload.status || 'PENDING',
+    return Booking.create({
+      ...payload,
+      appointment_date: appointmentDate,
+      duration_minutes: durationMinutes,
+      booking_code: payload.booking_code || await generateUniqueBookingCode({ transaction }),
+      status: payload.status || 'PENDING',
+    }, { transaction });
   });
 }
 
@@ -113,6 +184,14 @@ export async function updateBooking(id, payload) {
     const appointmentDate = payload.appointment_date ?? booking.appointment_date;
     const durationMinutes = payload.duration_minutes ?? booking.duration_minutes;
     await ensureLawyerExists(lawyerId);
+    const parsedAppointment = parseAppointment(appointmentDate);
+    const normalizedDuration = normalizeDuration(durationMinutes);
+    await ensureWithinWorkingSchedule({
+      lawyerId,
+      appointmentDate,
+      parsedAppointment,
+      durationMinutes: normalizedDuration,
+    });
     await ensureNoConflict({ lawyerId, appointmentDate, durationMinutes, excludeBookingId: booking.id });
   }
   await booking.update(payload);
@@ -170,6 +249,14 @@ export async function updateCustomerBooking(userId, bookingId, payload) {
     customer_phone: payload.customer_phone ?? booking.customer_phone,
   };
   await ensureLawyerExists(allowed.lawyer_id);
+  const parsedAppointment = parseAppointment(allowed.appointment_date);
+  const normalizedDuration = normalizeDuration(allowed.duration_minutes);
+  await ensureWithinWorkingSchedule({
+    lawyerId: allowed.lawyer_id,
+    appointmentDate: allowed.appointment_date,
+    parsedAppointment,
+    durationMinutes: normalizedDuration,
+  });
   await ensureNoConflict({
     lawyerId: allowed.lawyer_id,
     appointmentDate: allowed.appointment_date,

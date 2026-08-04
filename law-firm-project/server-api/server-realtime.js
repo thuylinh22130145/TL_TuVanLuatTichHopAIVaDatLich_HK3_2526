@@ -9,16 +9,24 @@ import { emitBookingChanged, initializeSocket } from './src/realtime/socket.js';
 let httpServer;
 let isShuttingDown = false;
 
-Booking.addHook('afterCreate', 'socket-booking-created', (booking) => {
-  emitBookingChanged('created', booking);
+function emitAfterCommit(action, booking, options = {}) {
+  if (options.transaction) {
+    options.transaction.afterCommit(() => emitBookingChanged(action, booking));
+    return;
+  }
+  emitBookingChanged(action, booking);
+}
+
+Booking.addHook('afterCreate', 'socket-booking-created', (booking, options) => {
+  emitAfterCommit('created', booking, options);
 });
 
-Booking.addHook('afterUpdate', 'socket-booking-updated', (booking) => {
-  emitBookingChanged('updated', booking);
+Booking.addHook('afterUpdate', 'socket-booking-updated', (booking, options) => {
+  emitAfterCommit('updated', booking, options);
 });
 
-Booking.addHook('afterDestroy', 'socket-booking-deleted', (booking) => {
-  emitBookingChanged('deleted', booking);
+Booking.addHook('afterDestroy', 'socket-booking-deleted', (booking, options) => {
+  emitAfterCommit('deleted', booking, options);
 });
 
 async function start() {
