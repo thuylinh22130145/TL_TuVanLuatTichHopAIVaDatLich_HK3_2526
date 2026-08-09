@@ -103,6 +103,79 @@ class VectorRetrieverTests(unittest.TestCase):
 
         self.assertTrue(chunks)
         self.assertTrue(all(chunk.pages == (7,) for chunk in chunks))
+
+    def test_vector_search_never_returns_a_document_outside_allowed_domain(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data_path = Path(directory)
+            family_document = LawDocument(
+                doc_id="hon-nhan",
+                title="Luật Hôn nhân và gia đình",
+                specialization="Hôn nhân và Gia đình",
+                file_path=data_path / "hon-nhan.txt",
+                content="Quyền nuôi con sau khi ly hôn.",
+            )
+            criminal_document = LawDocument(
+                doc_id="hinh-su",
+                title="Bộ luật Hình sự",
+                specialization="Hình sự",
+                file_path=data_path / "hinh-su.txt",
+                content="Nội dung hình sự.",
+            )
+            models = Mock()
+
+            def embed_content(*, model, contents, config):
+                if config.task_type == "RETRIEVAL_DOCUMENT":
+                    return SimpleNamespace(embeddings=[
+                        SimpleNamespace(values=unit_vector(0)),
+                        SimpleNamespace(values=unit_vector(1)),
+                    ])
+                return SimpleNamespace(
+                    embeddings=[SimpleNamespace(values=unit_vector(1))]
+                )
+
+            models.embed_content.side_effect = embed_content
+            index = GeminiVectorIndex(data_path)
+            with patch(
+                "app.services.rag_retriever._get_client",
+                return_value=SimpleNamespace(models=models),
+            ):
+                result = index.search(
+                    "quyền nuôi con sau ly hôn",
+                    [family_document, criminal_document],
+                    {family_document.doc_id},
+                )
+
+            self.assertEqual(result.document.doc_id, "hon-nhan")
+
+    def test_retriever_filters_documents_by_detected_specialization(self):
+        retriever = RAGRetriever()
+        retriever._documents = [
+            LawDocument(
+                doc_id="hinh-su",
+                title="Bộ luật Hình sự",
+                specialization="Hình sự",
+                file_path=Path("hinh-su.txt"),
+                content="Quyền nuôi con sau ly hôn được nhắc trong ví dụ.",
+            ),
+            LawDocument(
+                doc_id="hon-nhan",
+                title="Luật Hôn nhân và gia đình",
+                specialization="Hôn nhân gia đình",
+                file_path=Path("hon-nhan.txt"),
+                content="Quy định về con chung khi ly hôn.",
+            ),
+        ]
+
+        with patch(
+            "app.services.rag_retriever.is_gemini_configured",
+            return_value=False,
+        ):
+            result = retriever.retrieve(
+                "quyền nuôi con sau ly hôn",
+                "Hôn nhân và Gia đình",
+            )
+
+        self.assertEqual(result.document.doc_id, "hon-nhan")
     def test_keyword_search_prefers_robbery_penalty_over_cross_reference(self):
         document = LawDocument(
             doc_id='hinh-su',

@@ -115,6 +115,7 @@ export function mapChatFromApi(data) {
     source: data.source,
     aiProvider: data.aiProvider ?? data.ai_provider,
     model: data.model,
+    sessionId: data.sessionId ?? data.session_id ?? null,
     retrievalScore: data.retrievalScore ?? data.retrieval_score,
     referenceTitle: data.referenceTitle ?? data.reference_title,
     citations: (data.citations || []).map((citation) => ({

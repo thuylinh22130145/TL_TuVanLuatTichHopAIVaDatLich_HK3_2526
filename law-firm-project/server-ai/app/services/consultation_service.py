@@ -30,12 +30,13 @@ def _sanitize_page_citations(answer: str, allowed_pages: list[int]) -> str:
 
 def _history_text(conversation_history: list[dict] | None) -> str:
     lines = []
-    for item in (conversation_history or [])[-12:]:
+    for item in (conversation_history or [])[-8:]:
         role = 'Người dùng' if item.get('role') == 'user' else 'Chatbot'
         content = str(item.get('content') or '').strip()
         if content:
-            lines.append(f'{role}: {content}')
-    return '\n'.join(lines)[-12000:]
+            limit = 2000 if item.get('role') == 'user' else 800
+            lines.append(f'{role}: {content[:limit]}')
+    return '\n'.join(lines)[-6000:]
 
 
 async def predict_consultation(
@@ -65,7 +66,7 @@ async def predict_consultation(
     history = _history_text(conversation_history)
     user_history = '\n'.join(
         str(item.get('content') or '').strip()
-        for item in (conversation_history or [])[-12:]
+        for item in (conversation_history or [])[-8:]
         if item.get('role') == 'user'
     )
     if user_history:
@@ -78,7 +79,12 @@ async def predict_consultation(
     if question_specialization != 'Tổng quát':
         retrieval_query = f'{query}\nLĩnh vực pháp luật: {question_specialization}'
 
-    retrieval = retriever.retrieve(retrieval_query)
+    # Keep the FastAPI event loop responsive while parsing and searching.
+    retrieval = await asyncio.to_thread(
+        retriever.retrieve,
+        retrieval_query,
+        question_specialization,
+    )
     source: SourceType
     reference_title: str | None = None
     document_specialization: str | None = None
@@ -153,4 +159,7 @@ async def predict_consultation(
         retrieval_score=retrieval.score,
         reference_title=reference_title,
         citations=citations,
+        retrieval_backend=retrieval.backend,
+        embedding_model=retrieval.embedding_model,
+        matched_chunk_count=len(retrieval.matched_chunks),
     )

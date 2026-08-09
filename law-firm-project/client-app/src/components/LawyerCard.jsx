@@ -1,3 +1,5 @@
+import LawyerAvatar from './LawyerAvatar';
+
 export default function LawyerCard({ lawyer, selected, onSelect }) {
   return (
     <button
@@ -8,9 +10,7 @@ export default function LawyerCard({ lawyer, selected, onSelect }) {
       }`}
     >
       <div className="flex gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-law-navy/10 font-serif text-lg text-law-navy">
-          {lawyer.name.charAt(0)}
-        </div>
+        <LawyerAvatar lawyer={lawyer} className='h-14 w-14 text-lg' />
         <div>
           <h3 className="font-semibold text-law-navy">{lawyer.name}</h3>
           <p className="text-xs text-law-gold">{lawyer.title}</p>

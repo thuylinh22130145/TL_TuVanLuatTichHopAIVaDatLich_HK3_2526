@@ -104,3 +104,22 @@ test('does not save when the lawyer has no available shift that day', async () =
   );
   assert.equal(await Booking.count(), 0);
 });
+
+test('rejects an overlapping active booking but accepts an adjacent slot', async () => {
+  await createPublicBooking(bookingPayload(toLocalInput(futureAt(10)), 60));
+
+  await assert.rejects(
+    createPublicBooking(bookingPayload(toLocalInput(futureAt(10, 30)), 30)),
+    (error) => error.statusCode === 409 && /đã có lịch hẹn/.test(error.message),
+  );
+  await createPublicBooking(bookingPayload(toLocalInput(futureAt(11)), 60));
+  assert.equal(await Booking.count(), 2);
+});
+
+test('rejects an unsupported appointment duration', async () => {
+  await assert.rejects(
+    createPublicBooking(bookingPayload(toLocalInput(futureAt(10)), 10)),
+    (error) => error.statusCode === 400 && /Thời lượng/.test(error.message),
+  );
+  assert.equal(await Booking.count(), 0);
+});

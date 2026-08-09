@@ -1,14 +1,56 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ChatBubble from '../../components/ChatBubble';
-import { getInitialChatMessages, sendChatMessage } from '../../services/chatService';
+import LawyerAvatar from '../../components/LawyerAvatar';
+import { useAuth } from '../../context/AuthContext';
+import {
+  deleteChatSession,
+  fetchChatSession,
+  fetchChatSessions,
+  getInitialChatMessages,
+  sendChatMessage,
+} from '../../services/chatService';
 import './ChatPage.css';
 
+function restoreMessages(session) {
+  return [
+    getInitialChatMessages()[0],
+    ...(session.messages || []).map((item) => ({
+      id: `msg-db-${item.id}`,
+      role: item.role === 'USER' ? 'user' : 'assistant',
+      content: item.content,
+      timestamp: item.created_at,
+      citations: item.citations || [],
+    })),
+  ];
+}
+
 export default function ChatPage() {
+  const { authenticated, user } = useAuth();
   const [messages, setMessages] = useState(getInitialChatMessages);
+  const [sessionId, setSessionId] = useState(null);
+  const [sessions, setSessions] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!authenticated || user?.role !== 'USER') {
+      setSessionId(null);
+      return;
+    }
+    const storageKey = `legal-chat-session:${user.id}`;
+    const savedId = Number(localStorage.getItem(storageKey));
+    fetchChatSessions().then(setSessions).catch(() => setSessions([]));
+    if (!Number.isSafeInteger(savedId) || savedId < 1) return;
+
+    fetchChatSession(savedId)
+      .then((session) => {
+        setSessionId(savedId);
+        setMessages(restoreMessages(session));
+      })
+      .catch(() => localStorage.removeItem(storageKey));
+  }, [authenticated, user?.id, user?.role]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,7 +71,12 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      const reply = await sendChatMessage(text, messages);
+      const reply = await sendChatMessage(text, messages, sessionId);
+      if (reply.sessionId && authenticated && user?.role === 'USER') {
+        setSessionId(reply.sessionId);
+        localStorage.setItem(`legal-chat-session:${user.id}`, String(reply.sessionId));
+        fetchChatSessions().then(setSessions).catch(() => {});
+      }
       setMessages((current) => [...current, reply]);
     } catch (error) {
       setMessages((current) => [...current, {
@@ -44,13 +91,90 @@ export default function ChatPage() {
     }
   };
 
+  const startNewConversation = () => {
+    if (authenticated && user?.role === 'USER') {
+      localStorage.removeItem(`legal-chat-session:${user.id}`);
+    }
+    setSessionId(null);
+    setMessages(getInitialChatMessages());
+    setInput('');
+  };
+
+  const openConversation = async (id) => {
+    const nextId = Number(id);
+    if (!nextId || nextId === sessionId) return;
+    setSending(true);
+    try {
+      const session = await fetchChatSession(nextId);
+      setSessionId(nextId);
+      setMessages(restoreMessages(session));
+      localStorage.setItem(`legal-chat-session:${user.id}`, String(nextId));
+    } catch (requestError) {
+      setMessages((current) => [...current, {
+        id: `msg-err-${Date.now()}`,
+        role: 'assistant',
+        content: requestError.response?.data?.message || 'Không mở được phiên tư vấn.',
+        timestamp: new Date().toISOString(),
+      }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const removeConversation = async () => {
+    if (!sessionId || !window.confirm('Xóa cuộc trò chuyện này?')) return;
+    try {
+      await deleteChatSession(sessionId);
+      setSessions((current) => current.filter((item) => item.id !== sessionId));
+      startNewConversation();
+    } catch (requestError) {
+      setMessages((current) => [...current, {
+        id: `msg-err-${Date.now()}`,
+        role: 'assistant',
+        content: requestError.response?.data?.message || 'Không xóa được phiên tư vấn.',
+        timestamp: new Date().toISOString(),
+      }]);
+    }
+  };
+
   return (
     <div className='chat-page-shell'>
       <div className='chat-page-hero'>
-        <h1 className='chat-page-title'>Tư vấn pháp lý sơ bộ với AI</h1>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
+          <h1 className='chat-page-title'>Tư vấn pháp lý sơ bộ với AI</h1>
+          {authenticated && user?.role === 'USER' && messages.length > 1 && (
+            <button type='button' onClick={startNewConversation} className='btn-secondary'>
+              Cuộc trò chuyện mới
+            </button>
+          )}
+        </div>
         <p className='chat-page-subtitle'>
           Gemini phân tích câu hỏi dựa trên kho văn bản nội bộ và đề xuất luật sư theo lĩnh vực phù hợp.
         </p>
+        {authenticated && user?.role === 'USER' && sessions.length > 0 && (
+          <div className='mt-4 flex flex-wrap items-center gap-2'>
+            <label className='text-sm text-law-slate' htmlFor='chat-session'>Lịch sử tư vấn</label>
+            <select
+              id='chat-session'
+              className='input-field max-w-md'
+              value={sessionId || ''}
+              onChange={(event) => event.target.value
+                ? openConversation(event.target.value)
+                : startNewConversation()}
+              disabled={sending}
+            >
+              <option value=''>Cuộc trò chuyện mới</option>
+              {sessions.map((session) => (
+                <option key={session.id} value={session.id}>{session.title || `Phiên #${session.id}`}</option>
+              ))}
+            </select>
+            {sessionId && (
+              <button type='button' onClick={removeConversation} className='text-sm font-semibold text-red-600'>
+                Xóa phiên
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className='chat-shell'>
@@ -101,11 +225,17 @@ export default function ChatPage() {
                   <div className='mt-3 grid gap-3 sm:grid-cols-2'>
                     {message.suggestedLawyers.map((lawyer) => (
                       <article key={lawyer.id} className='rounded-xl border border-law-navy/10 bg-white p-3'>
-                        <p className='font-semibold text-law-navy'>{lawyer.name}</p>
-                        <p className='mt-1 text-sm text-law-slate'>{lawyer.specialty}</p>
+                        <div className='flex items-center gap-3'>
+                          <LawyerAvatar lawyer={lawyer} className='h-11 w-11 text-xs' />
+                          <div>
+                            <p className='font-semibold text-law-navy'>{lawyer.name}</p>
+                            <p className='mt-1 text-sm text-law-slate'>{lawyer.specialty}</p>
+                          </div>
+                        </div>
                         <p className='mt-1 text-xs text-law-slate'>{lawyer.experience} năm kinh nghiệm</p>
                         <Link
                           to={`/luat-su?specialization=${encodeURIComponent(message.specialization || '')}&lawyer=${lawyer.id}`}
+                          state={{ consultationSummary: message.consultationSummary || '' }}
                           className='mt-3 inline-block text-sm font-semibold text-law-gold hover:text-law-navy'
                         >
                           Xem hồ sơ và đặt lịch

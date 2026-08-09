@@ -94,7 +94,7 @@ Kiểm tra: `GET http://localhost:8000/health`
 ```env
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-3.6-flash
-GEMINI_MAX_OUTPUT_TOKENS=1600
+GEMINI_MAX_OUTPUT_TOKENS=1000
 ```
 
 3. Khởi động lại `server-ai`, sau đó kiểm tra `/health`: `ai_provider` phải là `gemini`.

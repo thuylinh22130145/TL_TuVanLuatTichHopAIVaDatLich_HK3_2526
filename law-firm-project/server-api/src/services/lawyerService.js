@@ -1,4 +1,5 @@
 import { Lawyer, LegalCategory, User } from '../models/index.js';
+import { sequelize } from '../config/database.js';
 import { ApiError } from '../utils/ApiError.js';
 
 const categoryInclude = [{
@@ -51,8 +52,22 @@ export async function createLawyer(payload) {
 }
 
 export async function updateLawyer(id, payload) {
-  const lawyer = await getLawyerById(id);
-  await lawyer.update(payload);
+  await sequelize.transaction(async (transaction) => {
+    const lawyer = await Lawyer.findByPk(id, { transaction });
+    if (!lawyer) throw new ApiError(404, 'Không tìm thấy luật sư.');
+    await lawyer.update(payload, { transaction });
+
+    const userChanges = {};
+    if (payload.full_name !== undefined) userChanges.full_name = payload.full_name;
+    if (payload.phone !== undefined) userChanges.phone = payload.phone;
+    if (payload.avatar_url !== undefined) userChanges.avatar_url = payload.avatar_url;
+    if (Object.keys(userChanges).length > 0) {
+      await User.update(userChanges, {
+        where: { id: lawyer.user_id },
+        transaction,
+      });
+    }
+  });
   return getLawyerById(id);
 }
 

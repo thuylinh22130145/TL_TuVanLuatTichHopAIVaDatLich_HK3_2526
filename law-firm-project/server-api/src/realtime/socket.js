@@ -101,3 +101,18 @@ export function emitBookingChanged(action, booking) {
     io.to(`user:${booking.user_id}`).emit('booking:changed', payload);
   }
 }
+
+export function emitLawyerChanged(action, lawyer) {
+  if (!io || !lawyer) return;
+
+  const payload = {
+    action,
+    lawyerId: lawyer.id,
+    userId: lawyer.user_id,
+    occurredAt: new Date().toISOString(),
+  };
+
+  io.to('role:ADMIN').emit('lawyer:changed', payload);
+  io.to('role:USER').emit('lawyer:changed', payload);
+  io.to(`user:${lawyer.user_id}`).emit('lawyer:changed', payload);
+}

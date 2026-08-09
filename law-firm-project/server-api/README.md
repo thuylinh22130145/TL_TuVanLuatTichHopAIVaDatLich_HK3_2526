@@ -31,7 +31,7 @@ server-api/
 |--------|------|--------|
 | GET | `/lawyers` | Danh sách luật sư `active` |
 | POST | `/bookings` | Tạo lịch, sinh `booking_code` `LAW-XXXX` |
-| POST | `/chat` | Proxy AI (mock) + gợi ý ≤3 luật sư |
+| POST | `/chat` | Proxy Gemini/RAG + gợi ý ≤3 luật sư; tự lưu phiên khi có JWT khách hàng |
 
 **POST /bookings** body:
 ```json
@@ -45,8 +45,19 @@ server-api/
 }
 ```
 
-**POST /chat** body: `{ "message": "..." }`  
-Response `data`: `{ answer, specialization, suggestBooking, suggestedLawyers[] }`
+**POST /chat** body: `{ "message": "...", "session_id": 12 }`
+`session_id` là tùy chọn. Với JWT của khách hàng, response trả thêm `sessionId` và server dùng lịch sử đã lưu thay cho lịch sử do client tự khai báo.
+
+### Khách hàng — `/api/customer` (Bearer JWT, vai trò USER)
+
+| Method | Path | Mô tả |
+|--------|------|--------|
+| GET/POST | `/bookings` | Xem hoặc tạo lịch của chính mình |
+| PUT | `/bookings/:id` | Sửa lịch đang chờ xác nhận |
+| PATCH | `/bookings/:id/cancel` | Hủy lịch đang chờ/đã xác nhận |
+| GET | `/chat-sessions` | Danh sách phiên tư vấn đã lưu |
+| GET | `/chat-sessions/:id` | Nội dung một phiên thuộc tài khoản |
+| DELETE | `/chat-sessions/:id` | Xóa phiên và toàn bộ tin nhắn |
 
 ### Admin — `/api/admin`
 
@@ -72,7 +83,7 @@ Mặc định: `http://localhost:3000` — staff `admin` / `admin123`
 
 ## Server-AI
 
-Luôn proxy chat/tài liệu tới `AI_SERVICE_URL`. Câu trả lời AI sinh bởi `mock_llm` trên server-ai (có thể thay LLM thật sau).
+Luôn proxy chat/tài liệu tới `AI_SERVICE_URL`. Nếu `server-ai` được cấu hình `GEMINI_API_KEY`, câu trả lời AI sẽ dùng Google Gemini thật và retrieval vector thực tế. Nếu chưa có key thì hệ thống còn giữ fallback cục bộ an toàn.
 
 ## Sinh mã đặt lịch
 

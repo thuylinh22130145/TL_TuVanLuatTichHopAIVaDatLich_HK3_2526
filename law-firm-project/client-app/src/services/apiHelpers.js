@@ -26,6 +26,7 @@ export const API_PATHS = {
   },
   customer: {
     bookings: '/customer/bookings',
+    chatSessions: '/customer/chat-sessions',
   },
   lawyer: {
     bookings: '/lawyer/bookings',

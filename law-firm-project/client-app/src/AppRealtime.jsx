@@ -27,8 +27,10 @@ function RealtimeApplication() {
     };
 
     socket.on('booking:changed', refreshBookingViews);
+    socket.on('lawyer:changed', refreshBookingViews);
     return () => {
       socket.off('booking:changed', refreshBookingViews);
+      socket.off('lawyer:changed', refreshBookingViews);
     };
   }, [token]);
 

@@ -11,6 +11,6 @@ const router = Router();
 router.get('/lawyers', asyncHandler(lawyerCtrl.getLawyers));
 router.post('/lawyer-applications', optionalAuth, asyncHandler(lawyerApplicationCtrl.submitApplication));
 router.post('/bookings', asyncHandler(bookingCtrl.createBooking));
-router.post('/chat', asyncHandler(chatCtrl.postChat));
+router.post('/chat', optionalAuth, asyncHandler(chatCtrl.postChat));
 
 export default router;

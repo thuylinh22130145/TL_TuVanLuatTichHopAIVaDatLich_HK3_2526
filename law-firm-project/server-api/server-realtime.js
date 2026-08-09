@@ -3,8 +3,8 @@ import { createServer } from 'node:http';
 import app from './src/app.js';
 import { env } from './src/config/env.js';
 import { connectDatabase, sequelize } from './src/config/database.js';
-import { Booking } from './src/models/index.js';
-import { emitBookingChanged, initializeSocket } from './src/realtime/socket.js';
+import { Booking, Lawyer } from './src/models/index.js';
+import { emitBookingChanged, emitLawyerChanged, initializeSocket } from './src/realtime/socket.js';
 
 let httpServer;
 let isShuttingDown = false;
@@ -27,6 +27,18 @@ Booking.addHook('afterUpdate', 'socket-booking-updated', (booking, options) => {
 
 Booking.addHook('afterDestroy', 'socket-booking-deleted', (booking, options) => {
   emitAfterCommit('deleted', booking, options);
+});
+
+Lawyer.addHook('afterCreate', 'socket-lawyer-created', (lawyer, options) => {
+  if (options.transaction) {
+    options.transaction.afterCommit(() => emitLawyerChanged('created', lawyer));
+  } else emitLawyerChanged('created', lawyer);
+});
+
+Lawyer.addHook('afterUpdate', 'socket-lawyer-updated', (lawyer, options) => {
+  if (options.transaction) {
+    options.transaction.afterCommit(() => emitLawyerChanged('updated', lawyer));
+  } else emitLawyerChanged('updated', lawyer);
 });
 
 async function start() {

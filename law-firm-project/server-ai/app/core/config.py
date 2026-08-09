@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     rag_similarity_threshold: float = 0.35
     gemini_api_key: str = ''
     gemini_model: str = 'gemini-3.5-flash-lite'
-    gemini_max_output_tokens: int = 1600
+    # Focused chat answers finish faster; override for long-form reports if needed.
+    gemini_max_output_tokens: int = 1000
     data_dir: str = 'app/data'
 
     @property

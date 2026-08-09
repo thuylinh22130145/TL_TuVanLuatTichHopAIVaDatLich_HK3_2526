@@ -25,6 +25,7 @@ from typing import Any
 from app.core.config import settings
 from app.services.document_loader import LawDocument, load_documents_from_directory
 from app.services.gemini_service import _get_client, is_gemini_configured
+from app.services.specialization import canonicalize_specialization
 
 
 logger = logging.getLogger(__name__)
@@ -393,9 +394,16 @@ class GeminiVectorIndex:
         self,
         query: str,
         documents: list[LawDocument],
+        allowed_document_ids: set[str] | None = None,
     ) -> RetrievalResult:
         self.ensure_ready(documents)
-        if not self._chunks:
+        eligible_chunks = [
+            chunk
+            for chunk in self._chunks
+            if allowed_document_ids is None
+            or chunk.document.doc_id in allowed_document_ids
+        ]
+        if not eligible_chunks:
             return RetrievalResult(
                 document=None,
                 score=0.0,
@@ -415,7 +423,7 @@ class GeminiVectorIndex:
                     ),
                     chunk,
                 )
-                for chunk in self._chunks
+                for chunk in eligible_chunks
             ),
             key=lambda item: item[0],
             reverse=True,
@@ -524,7 +532,11 @@ class RAGRetriever:
         self._vector_index.invalidate()
         return len(self._documents)
 
-    def retrieve(self, query: str) -> RetrievalResult:
+    def retrieve(
+        self,
+        query: str,
+        specialization: str | None = None,
+    ) -> RetrievalResult:
         if not query.strip() or not self.documents:
             result = RetrievalResult(
                 document=None,
@@ -535,9 +547,33 @@ class RAGRetriever:
             _set_retrieval_metadata(result)
             return result
 
+        canonical_specialization = canonicalize_specialization(specialization)
+        eligible_documents = self.documents
+        if canonical_specialization:
+            eligible_documents = [
+                document
+                for document in self.documents
+                if canonicalize_specialization(document.specialization)
+                == canonical_specialization
+            ]
+            if not eligible_documents:
+                result = RetrievalResult(
+                    document=None,
+                    score=0.0,
+                    matched_chunks=[],
+                    is_high_confidence=False,
+                    backend='none',
+                )
+                _set_retrieval_metadata(result)
+                return result
+
         if is_gemini_configured():
             try:
-                result = self._vector_index.search(query, self.documents)
+                result = self._vector_index.search(
+                    query,
+                    self.documents,
+                    {document.doc_id for document in eligible_documents},
+                )
                 _set_retrieval_metadata(result)
                 return result
             except Exception as error:
@@ -546,7 +582,7 @@ class RAGRetriever:
                     error,
                 )
 
-        result = _keyword_search(query, self.documents)
+        result = _keyword_search(query, eligible_documents)
         _set_retrieval_metadata(result)
         return result
 

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import LawyerCard from '../../components/LawyerCard';
 import BookingForm from '../../components/BookingForm';
 import Modal from '../../components/Modal';
+import LawyerAvatar from '../../components/LawyerAvatar';
 import * as lawyerService from '../../services/lawyerService';
 import * as appointmentService from '../../services/appointmentService';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LawyerInfoPage() {
   const { authenticated, user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,9 +149,12 @@ export default function LawyerInfoPage() {
           {selected && (
             <div className="lawyer-detail-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-serif text-xl font-semibold text-law-navy">{selected.name}</h2>
-                  <p className="text-sm text-law-gold">{selected.title}</p>
+                <div className='flex items-center gap-4'>
+                  <LawyerAvatar lawyer={selected} className='h-20 w-20 text-xl ring-2 ring-law-gold/20' />
+                  <div>
+                    <h2 className="font-serif text-xl font-semibold text-law-navy">{selected.name}</h2>
+                    <p className="text-sm text-law-gold">{selected.title}</p>
+                  </div>
                 </div>
                 <span className="rounded-full border border-law-gold/30 bg-law-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-law-gold">
                   Tư vấn chuyên sâu
@@ -191,6 +196,7 @@ export default function LawyerInfoPage() {
             onSubmit={handleBooking}
             submitting={submitting}
             customer={authenticated && user?.role === 'USER' ? user : null}
+            initialContent={location.state?.consultationSummary || ''}
           />
         </div>
       </div>

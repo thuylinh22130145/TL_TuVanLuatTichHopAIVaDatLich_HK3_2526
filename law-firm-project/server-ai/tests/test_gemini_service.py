@@ -37,8 +37,11 @@ class GeminiServiceTests(unittest.TestCase):
         self.assertIn('YÊU CẦU PHÂN TÍCH', call.kwargs['contents'])
         self.assertIn('Không dừng ở việc đánh giá đủ hay thiếu ngữ cảnh', call.kwargs['contents'])
         self.assertIn('Không hướng dẫn trốn tránh', call.kwargs['config'].system_instruction)
+        self.assertIn('Trả lời thẳng vào điều người dùng đang cần', call.kwargs['config'].system_instruction)
+        self.assertIn('không bắt buộc lặp đủ mọi mục', call.kwargs['config'].system_instruction.lower())
         self.assertEqual(call.kwargs['config'].max_output_tokens, 1200)
-        self.assertIsNone(call.kwargs['config'].temperature)
+        self.assertEqual(call.kwargs['config'].temperature, 0.2)
+        self.assertEqual(call.kwargs['config'].top_p, 0.95)
 
     def test_empty_response_raises_controlled_error(self):
         client = SimpleNamespace(

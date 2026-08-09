@@ -1,4 +1,4 @@
-export default function BookingForm({ lawyer, onSubmit, submitting, customer }) {
+export default function BookingForm({ lawyer, onSubmit, submitting, customer, initialContent = '' }) {
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
@@ -48,7 +48,7 @@ export default function BookingForm({ lawyer, onSubmit, submitting, customer }) 
         </label>
         <label className='block sm:col-span-2'>
           <span className='mb-1 block text-xs font-medium text-law-slate'>Nội dung tư vấn *</span>
-          <textarea name='content' required rows={4} className='input-field resize-y' placeholder='Mô tả ngắn vấn đề cần tư vấn...' />
+          <textarea name='content' required rows={4} className='input-field resize-y' defaultValue={initialContent} placeholder='Mô tả ngắn vấn đề cần tư vấn...' />
         </label>
       </div>
       <button type='submit' disabled={!lawyer || submitting} className='btn-primary w-full sm:w-auto'>
